@@ -1,739 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DBF Mission Lab — One‑Mission Focus</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <style>
-    :root{ --bg:#0b0f19; --surface:#0f1422; --ink:#eaf0f7; --muted:#a2b0c5; --line:rgba(255,255,255,.08); --accent:#6aa8ff; --accent-2:#98ffc9; --warn:#ffb25a; --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35); }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,Arial;color:var(--ink);background:radial-gradient(1400px 900px at 12% -10%,#1b2440 0%,var(--bg) 55%) fixed}
-    header{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(11,15,25,.9),rgba(11,15,25,.6) 70%,rgba(11,15,25,0));border-bottom:1px solid var(--line)}
-    .bar{display:flex;align-items:center;gap:16px;padding:14px 18px}
-    .logo{display:flex;align-items:center;gap:10px}
-    .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(180deg,var(--accent),#3d79ff);box-shadow:0 0 20px rgba(101,161,255,.6)}
-    h1{margin:0;font-size:18px;letter-spacing:.2px}
-    .flex{flex:1}
-    .seg{display:inline-flex;background:linear-gradient(180deg,#151b2c,#0e1422);border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .seg button{appearance:none;border:0;background:transparent;color:var(--ink);padding:8px 14px;font-size:13px;cursor:pointer}
-    .seg button.active{background:linear-gradient(180deg,#1d2744,#121a30)}
-    .right{display:flex;gap:8px}
-    .btn{appearance:none;border:1px solid var(--line);background:#0e1423;color:var(--ink);padding:8px 12px;border-radius:12px;cursor:pointer}
-    .global{display:flex;gap:12px;align-items:center;padding:0 18px 12px}
-    .kv{display:flex;gap:8px;align-items:center}
-    .kv label{font-size:12px;color:var(--muted)}
-    .kv input{width:120px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0e1423;color:var(--ink)}
-    .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1524;font-size:12px}
-    main{padding:16px;max-width:1200px;margin:0 auto}
-    .view{display:none}
-    .card{background:linear-gradient(180deg,#131a2e,#0f1527);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .panel{padding:18px}
-    h2{margin:0 0 8px;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .col{display:grid;gap:12px}
-    label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
-    input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#0e1423;color:var(--ink);outline:none}
-    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(101,161,255,.18)}
-    .help{font-size:12px;color:var(--muted)}
-    .metric{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-    .metric .k{font-size:12px;color:var(--muted);text-transform:uppercase}
-    .metric .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:.2px}
-    .stack{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px}
-    .graph{height:430px}
-    @media (max-width:1000px){.grid{grid-template-columns:1fr}}
-    .formula{background:#0c1220;border:1px solid var(--line);border-radius:12px;padding:12px}
-    .formula .line{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
-    .formula p{margin:8px 0 0}
-    .chip{display:inline-block;padding:4px 10px;border-radius:999px;background:#0f1524;border:1px solid var(--line);font-size:12px}
-    dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:#0f1524;color:var(--ink);width:min(920px,94vw)}
-    .modal-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
-    .modal-b{padding:0;height:min(75vh,720px)}
-    .modal-b iframe{width:100%;height:100%;border:0;border-bottom-left-radius:16px;border-bottom-right-radius:16px}
-    /* small helper */
-    .row{display:flex;gap:10px;align-items:center}
-    .inline{display:inline-flex;gap:8px;align-items:center}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBF Scoring Grapher</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root{--ink:#0e1320;--muted:#5a6473;--line:#e8ecf3}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 Inter,system-ui,Arial;background:#ffffff;color:var(--ink)}
+  header{padding:14px 18px;border-bottom:1px solid #eef2f7}
+  h1{margin:0;font-size:18px}
+  main{max-width:1150px;margin:0 auto;padding:16px;display:grid;gap:16px}
+  .card{border:1px solid #eef2f7;border-radius:14px;padding:16px}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:980px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+  input,select{width:100%;padding:10px 12px;border:1px solid #d9e1ec;border-radius:10px;font-size:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .chk{display:flex;gap:8px;align-items:center}
+  .metric{border:1px solid #eef2f7;border-radius:10px;padding:10px 12px}
+  .metric .k{font-size:12px;color:var(--muted)}
+  .metric .v{font-size:20px;font-weight:700}
+  .graph{height:440px}
+  .title{font-size:14px;font-weight:700;margin:0 0 8px}
+  .pill{font-size:12px;border:1px solid #d9e1ec;border-radius:999px;padding:4px 8px}
+  .btn{appearance:none;border:1px solid #d9e1ec;background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
+</style>
 </head>
 <body>
-  <header>
-    <div class="bar">
-      <div class="logo"><div class="dot"></div><h1>DBF Mission Lab</h1></div>
-      <div class="flex"></div>
-      <div class="seg" id="nav">
-        <button data-view="m1" class="active">M1</button>
-        <button data-view="m2">M2</button>
-        <button data-view="m3">M3</button>
-        <button data-view="gm">GM</button>
-        <button data-view="summary">Summary</button>
-      </div>
-      <div class="right">
-        <button class="btn" id="openRules">Rules PDF</button>
+<header>
+  <h1>DBF Scoring Grapher</h1>
+</header>
+<main>
+  <section class="card grid g3">
+    <div>
+      <div class="title">Aircraft & Reports</div>
+      <label>Wingspan (in, 0–60)
+        <input id="ws" type="number" step="1" min="0" max="60" value="60">
+      </label>
+      <label>Proposal (0–100)
+        <input id="prop" type="number" step="0.1" min="0" max="100" value="85">
+      </label>
+      <label>Design (0–100)
+        <input id="design" type="number" step="0.1" min="0" max="100" value="92">
+      </label>
+      <label>Participation (0–3)
+        <input id="part" type="number" step="1" min="0" max="3" value="3">
+      </label>
+      <div class="row">
+        <span class="pill" id="racPill">RAC —</span>
       </div>
     </div>
-    <div class="global">
-      <div class="kv">
-        <label for="ws_in">Wingspan (in)</label>
-        <input id="ws_in" type="number" step="0.25" min="0" value="60"/>
+    <div>
+      <div class="title">M1 & GM</div>
+      <label>M1 Successful?
+        <select id="m1s"><option value="1" selected>Yes</option><option value="0">No</option></select>
+      </label>
+      <label>Your GM time (s)
+        <input id="gm_time" type="number" step="0.01" min="0.01" value="75">
+      </label>
+      <label>Fastest GM time (s)
+        <input id="gm_min" type="number" step="0.01" min="0.01" value="60">
+      </label>
+      <div class="grid g2">
+        <div class="metric"><div class="k">M1</div><div class="v" id="m1_v">—</div></div>
+        <div class="metric"><div class="k">GM</div><div class="v" id="gm_v">—</div></div>
       </div>
-      <div class="kv"><span class="pill">RAC <span id="rac_txt">—</span></span></div>
-      <div class="help">RAC = 0.05 × WS(ft) + 0.75 (min 0.90). Change wingspan anytime; all missions update.</div>
     </div>
-  </header>
-
-  <main>
-    <!-- M1 View -->
-    <section class="view" id="view-m1">
-      <div class="card panel">
-        <h2>Mission 1 — Test Flight</h2>
-        <div class="grid">
-          <div class="col">
-            <div class="formula">
-              <div class="line">M1 = { 1 if successful; 0 otherwise }</div>
-              <p>Demonstrate a safe takeoff, lap, and landing. Toggle success to see how it ripples into the competition score.</p>
-            </div>
-            <label>Successful mission?
-              <select id="m1_success">
-                <option value="1">Yes</option>
-                <option value="0">No</option>
-              </select>
-            </label>
-            <div class="stack">
-              <div class="metric"><div class="k">M1 Score</div><div class="v" id="m1_score">—</div></div>
-              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m1">—</div></div>
-              <div class="metric"><div class="k">Competition (live)</div><div class="v" id="comp_tile_m1">—</div></div>
-            </div>
-          </div>
-          <div class="col">
-            <div id="m1_graph" class="graph"></div>
-            <div class="help">Competition score vs. M1 success given current report scores.</div>
-          </div>
-        </div>
+    <div>
+      <div class="title">Overall</div>
+      <div class="grid g2">
+        <div class="metric"><div class="k">Total Report</div><div class="v" id="rep_v">—</div></div>
+        <div class="metric"><div class="k">Total Mission</div><div class="v" id="tms_v">—</div></div>
+        <div class="metric"><div class="k">Competition</div><div class="v" id="comp_v">—</div></div>
       </div>
-    </section>
-
-    <!-- M2 View -->
-    <section class="view" id="view-m2">
-      <div class="card panel">
-        <h2>Mission 2 — Charter Flight</h2>
-        <div class="grid">
-          <div class="col">
-            <div class="formula">
-              <div class="line">EF = Wh / 100</div>
-              <div class="line">Income = p × (6 + 2L) + c × (10 + 8L)</div>
-              <div class="line">Cost = L × (10 + 0.5p + 2c) × EF</div>
-              <div class="line">Net = Income − Cost</div>
-              <div class="line"><strong>M2 = 1 + Net / Max<sub>Net</sub></strong></div>
-              <p>Fly passengers (p) and cargo pucks (c) for L laps. Energy factor (EF) scales operating cost by battery capacity Wh. Enter event normalization Max<sub>Net</sub> based on the best team.</p>
-            </div>
-
-            <div class="chip">Inputs</div>
-            <label># Passengers<input id="m2_pax" type="number" step="1" min="0" value="6"/></label>
-            <label># Cargo (hockey pucks)<input id="m2_cargo" type="number" step="1" min="0" value="2"/></label>
-            <label># Laps<input id="m2_laps" type="number" step="1" min="0" value="5"/></label>
-            <label>Total Propulsion Capacity (W‑h)<input id="m2_wh" type="number" step="0.1" min="1" value="80"/></label>
-            <label>Best Net Income in field (Max_Net_Income)<input id="m2_maxnet" type="number" step="0.01" min="0.01" value="1000"/></label>
-
-            <div class="chip" style="margin-top:10px">Limits</div>
-            <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-              <label>Min Passengers<input id="m2_min_p" type="number" step="1" min="0" value="0"/></label>
-              <label>Max Passengers<input id="m2_max_p" type="number" step="1" min="0" value="50"/></label>
-              <label>Min Cargo<input id="m2_min_c" type="number" step="1" min="0" value="0"/></label>
-              <label>Max Cargo<input id="m2_max_c" type="number" step="1" min="0" value="30"/></label>
-            </div>
-            <div class="help">Passenger and cargo inputs are clamped to these limits — adjust to match the rulebook for your event.</div>
-
-            <div class="stack" style="margin-top:8px">
-              <div class="metric"><div class="k">Income</div><div class="v" id="m2_income">—</div></div>
-              <div class="metric"><div class="k">Cost</div><div class="v" id="m2_cost">—</div></div>
-              <div class="metric"><div class="k">Net</div><div class="v" id="m2_net">—</div></div>
-            </div>
-            <div class="stack" style="margin-top:6px">
-              <div class="metric"><div class="k">EF</div><div class="v" id="m2_ef">—</div></div>
-              <div class="metric"><div class="k">M2 Score</div><div class="v" id="m2_score">—</div></div>
-              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m2">—</div></div>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="chip">Graphing</div>
-            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-              <label>Graph Type
-                <select id="m2_graph_type">
-                  <option value="curves" selected>Curves</option>
-                  <option value="sens">Sensitivity (%↔%)</option>
-                </select>
-              </label>
-              <label>Y‑Metric
-                <select id="m2_y_metric">
-                  <option value="score%" selected>M2 Score %</option>
-                  <option value="score">M2 Score</option>
-                  <option value="net%">Net %</option>
-                  <option value="net">Net</option>
-                  <option value="income%">Income %</option>
-                  <option value="cost%">Cost %</option>
-                  <option value="comp%">Competition %</option>
-                  <option value="comp">Competition</option>
-                </select>
-              </label>
-              <label id="m2_xaxis_label">X‑Axis (Sensitivity only)
-                <select id="m2_x_metric">
-                  <option value="t%" selected>Path % change</option>
-                  <option value="p%">Passengers %</option>
-                  <option value="c%">Cargo %</option>
-                  <option value="L%">Laps %</option>
-                  <option value="Wh%">Wh %</option>
-                  <option value="p">Passengers</option>
-                  <option value="c">Cargo</option>
-                  <option value="L">Laps</option>
-                  <option value="Wh">Wh</option>
-                </select>
-              </label>
-            </div>
-
-            <div id="m2_graph" class="graph"></div>
-
-            <!-- Curves controls: now supports toggling multiple variables and steps -->
-            <div id="m2_curves_ctrls" class="grid" style="grid-template-columns:1fr 1fr">
-              <label>Variables to plot
-                <div class="row">
-                  <label class="inline"><input type="checkbox" id="m2_show_L" checked> Laps</label>
-                  <label class="inline"><input type="checkbox" id="m2_show_p" checked> Passengers</label>
-                  <label class="inline"><input type="checkbox" id="m2_show_c" checked> Cargo</label>
-                  <label class="inline"><input type="checkbox" id="m2_show_wh" checked> Wh</label>
-                </div>
-              </label>
-              <label>Range (start→end)
-                <input id="m2_range" type="text" value="0→12"/>
-                <span class="help">Discrete inputs (p, c, L) auto-round to integers; Wh uses even steps.</span>
-              </label>
-              <label>Steps
-                <input id="m2_curves_steps" type="number" step="1" min="5" value="41"/>
-              </label>
-              <div></div>
-            </div>
-
-            <div id="m2_sens_ctrls" class="grid" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px">
-              <label>Span ±%<input id="m2_span" type="number" step="1" value="50"/></label>
-              <label>Steps<input id="m2_steps" type="number" step="1" value="41"/></label>
-              <label>Include competition?
-                <select id="m2_include_comp"><option value="1" selected>Yes</option><option value="0">No</option></select>
-              </label>
-              <label>Exp k (if used)<input id="m2_exp_k" type="number" step="0.1" value="2"/></label>
-
-              <div class="chip" style="grid-column:1/-1">Parameter profiles (how each input changes with the path %)</div>
-              <label>Passengers shape
-                <select id="m2_shape_p"><option value="off">(hold)</option><option value="linear" selected>linear</option><option value="quad">quadratic</option><option value="cube">cubic</option><option value="sqrt">sqrt</option><option value="exp">exp</option></select>
-              </label>
-              <label>Cargo shape
-                <select id="m2_shape_c"><option value="off">(hold)</option><option value="linear">linear</option><option value="quad" selected>quadratic</option><option value="cube">cubic</option><option value="sqrt">sqrt</option><option value="exp">exp</option></select>
-              </label>
-              <label>Laps shape
-                <select id="m2_shape_L"><option value="off">(hold)</option><option value="linear">linear</option><option value="quad">quadratic</option><option value="cube" selected>cubic</option><option value="sqrt">sqrt</option><option value="exp">exp</option></select>
-              </label>
-              <label>Wh shape
-                <select id="m2_shape_wh"><option value="off">(hold)</option><option value="linear">linear</option><option value="quad">quadratic</option><option value="cube">cubic</option><option value="sqrt" selected>sqrt</option><option value="exp">exp</option></select>
-              </label>
-              <div class="help" style="grid-column:1/-1">Each shape maps the path percent t in [−1, 1] to a relative change for that parameter. Discrete inputs (pax, cargo, laps) are rounded to integers and clamped to your limits.</div>
-            </div>
-
-            <div class="grid" style="grid-template-columns:auto auto auto;align-items:center">
-              <button class="btn" id="m2_play">▶︎ Animate</button>
-              <div class="help">Curves: chosen Y‑Metric vs selected input variables. Sensitivity: % change in score vs % change along a multi‑parameter path.</div>
-            </div>
-          </div>
-        </div>
+      <div class="row" style="margin-top:8px">
+        <button id="reset_all" class="btn">Reset All</button>
       </div>
-    </section>
-
-    <!-- M3 View -->
-    <section class="view" id="view-m3">
-      <div class="card panel">
-        <h2>Mission 3 — Banner Flight</h2>
-        <div class="grid">
-          <div class="col">
-            <div class="formula">
-              <div class="line">Metric = (L × Len) / RAC</div>
-              <div class="line"><strong>M3 = 2 + Metric / max(Metric)</strong></div>
-              <p>Tow a banner of length Len for L laps. Longer banners and more laps help, tempered by your aircraft's RAC.</p>
-            </div>
-            <label># Laps<input id="m3_laps" type="number" step="1" min="0" value="6"/></label>
-            <label>Banner length (in)<input id="m3_len" type="number" step="0.5" min="10" value="30"/></label>
-            <label>Field max of (L·Len/RAC) <input id="m3_max" type="number" step="0.01" min="0.01" value="500"/></label>
-            <div class="stack">
-              <div class="metric"><div class="k">Metric (L·Len/RAC)</div><div class="v" id="m3_metric">—</div></div>
-              <div class="metric"><div class="k">M3 Score</div><div class="v" id="m3_score">—</div></div>
-              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m3">—</div></div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="chip">Heatmap</div>
-            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-              <label>Laps Max<input id="m3_lap_hi" type="number" step="1" value="10"/></label>
-              <label>Banner min (in)<input id="m3_len_lo" type="number" step="0.5" value="10"/></label>
-              <label>Banner max (in)<input id="m3_len_hi" type="number" step="0.5" value="60"/></label>
-            </div>
-            <div id="m3_graph" class="graph"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- GM View -->
-    <section class="view" id="view-gm">
-      <div class="card panel">
-        <h2>Ground Mission (GM)</h2>
-        <div class="grid">
-          <div class="col">
-            <div class="formula">
-              <div class="line"><strong>GM = min(time) / your time</strong></div>
-              <p>Faster ground operations improve GM. Enter the event's fastest time and your time.</p>
-            </div>
-            <label>Your time (s)<input id="gm_time" type="number" step="0.01" min="0.01" value="75"/></label>
-            <label>Fastest time in field (s)<input id="gm_min" type="number" step="0.01" min="0.01" value="60"/></label>
-            <div class="stack">
-              <div class="metric"><div class="k">GM Score</div><div class="v" id="gm_score">—</div></div>
-              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_gm">—</div></div>
-              <div class="metric"><div class="k">Competition (live)</div><div class="v" id="comp_tile_gm">—</div></div>
-            </div>
-          </div>
-          <div class="col">
-            <div id="gm_graph" class="graph"></div>
-            <div class="help">Gauge and curve show how GM affects overall score given your current report scores.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Summary View -->
-    <section class="view" id="view-summary">
-      <div class="card panel">
-        <h2>Reports & Overall</h2>
-        <div class="grid">
-          <div class="col">
-            <div class="formula">
-              <div class="line">Total Report = 0.15 × Proposal + 0.85 × Design</div>
-              <div class="line"><strong>Competition = Total Report × Total Mission + Participation</strong></div>
-            </div>
-            <label>Proposal Score (0–100)<input id="rep_prop" type="number" min="0" max="100" step="0.1" value="85"/></label>
-            <label>Design Report (0–100)<input id="rep_design" type="number" min="0" max="100" step="0.1" value="92"/></label>
-            <label>Participation (0–3)<input id="part" type="number" min="0" max="3" step="1" value="3"/></label>
-            <div class="stack" style="margin-top:6px">
-              <div class="metric"><div class="k">Total Report</div><div class="v" id="rep_total">—</div></div>
-              <div class="metric"><div class="k">Total Mission</div><div class="v" id="tms_total">—</div></div>
-              <div class="metric"><div class="k">Competition Score</div><div class="v" id="comp_total">—</div></div>
-            </div>
-          </div>
-          <div class="col">
-            <div id="stack_graph" class="graph"></div>
-            <div class="help">Bar chart shows contribution of each mission to Total Mission. Competition score = Total Report × Total Mission + Participation.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <dialog id="rulesDialog">
-    <div class="modal-h">
-      <strong>DBF 2025–26 Rules</strong>
-      <button class="btn" id="closeRules">Close</button>
     </div>
-    <div class="modal-b">
-      <iframe src="2026-DBF-Rules.pdf#toolbar=0&navpanes=0" title="Rules PDF"></iframe>
+  </section>
+
+  <section class="card grid g3">
+    <div>
+      <div class="title">M2 Baseline Inputs</div>
+      <label>Passengers (p)
+        <input id="m2_p" type="number" step="1" min="0" value="6">
+      </label>
+      <label>Cargo pucks (c)
+        <input id="m2_c" type="number" step="1" min="0" value="2">
+      </label>
+      <label>Laps (L)
+        <input id="m2_L" type="number" step="1" min="0" value="5">
+      </label>
+      <label>Total Propulsion Capacity (Wh, ≤100)
+        <input id="m2_Wh" type="number" step="0.1" min="0" max="100" value="80">
+      </label>
     </div>
-  </dialog>
+    <div>
+      <div class="title">M2 Normalization & Limits</div>
+      <label>Max Net Income in field
+        <input id="m2_MaxNet" type="number" step="0.01" min="0.01" value="1000">
+      </label>
+      <div class="grid g2">
+        <label>Min Passengers
+          <input id="m2_minP" type="number" step="1" min="0" value="0">
+        </label>
+        <label>Max Passengers
+          <input id="m2_maxP" type="number" step="1" min="0" value="50">
+        </label>
+        <label>Min Cargo
+          <input id="m2_minC" type="number" step="1" min="0" value="0">
+        </label>
+        <label>Max Cargo
+          <input id="m2_maxC" type="number" step="1" min="0" value="30">
+        </label>
+      </div>
+      <div class="row">
+        <span class="pill" id="m2_ef_pill">EF —</span>
+        <button id="m2_reset" class="btn">Reset M2</button>
+      </div>
+    </div>
+    <div>
+      <div class="title">M2 Baseline Metrics</div>
+      <div class="grid g2">
+        <div class="metric"><div class="k">Income</div><div class="v" id="m2_income">—</div></div>
+        <div class="metric"><div class="k">Cost</div><div class="v" id="m2_cost">—</div></div>
+        <div class="metric"><div class="k">Net</div><div class="v" id="m2_net">—</div></div>
+        <div class="metric"><div class="k">M2 Score</div><div class="v" id="m2_score">—</div></div>
+      </div>
+    </div>
+  </section>
 
-  <script>
-    // ---------- Utilities ----------
-    const $ = (id)=>document.getElementById(id);
-    const fmt=(x,d=2)=> (isFinite(x)? Number(x).toFixed(d):'—');
-    const clamp=(x,lo,hi)=> Math.min(Math.max(x,lo),hi);
+  <section class="card grid g2">
+    <div>
+      <div class="title">M2 Curves</div>
+      <div class="grid g3">
+        <label>X-Axis
+          <select id="m2_curveX">
+            <option value="L">Laps</option>
+            <option value="p">Passengers</option>
+            <option value="c">Cargo</option>
+            <option value="Wh">Wh</option>
+          </select>
+        </label>
+        <label>Range start
+          <input id="m2_curveLo" type="number" step="1" value="0">
+        </label>
+        <label>Range end
+          <input id="m2_curveHi" type="number" step="1" value="12">
+        </label>
+      </div>
+      <div class="grid g4" style="margin-top:6px">
+        <label>Step
+          <input id="m2_curveStep" type="number" step="0.1" value="1">
+        </label>
+        <div class="chk"><input id="m2_showIncome" type="checkbox" checked><span>Income</span></div>
+        <div class="chk"><input id="m2_showCost" type="checkbox" checked><span>Cost</span></div>
+        <div class="chk"><input id="m2_showNet" type="checkbox" checked><span>Net</span></div>
+        <div class="chk"><input id="m2_showScore" type="checkbox" checked><span>Score</span></div>
+      </div>
+    </div>
+    <div><div id="m2_curvePlot" class="graph"></div></div>
+  </section>
 
-    // ---------- Global state (shared across views) ----------
-    const state={
-      ws_in:60,
-      // M1
-      m1_success:1,
-      // M2
-      m2:{p:6,c:2,L:5,Wh:80,maxNet:1000, minP:0,maxP:50,minC:0,maxC:30},
-      // M3
-      m3:{L:6,len:30,max:500},
-      // GM
-      gm:{time:75,min:60},
-      // Reports
-      rep:{prop:85, design:92, part:3}
-    };
+  <section class="card grid g2">
+    <div>
+      <div class="title">M2 Sensitivity</div>
+      <div class="grid g3">
+        <label>± Span (%)
+          <input id="m2_sensSpan" type="number" step="1" value="50">
+        </label>
+        <label>Steps
+          <input id="m2_sensSteps" type="number" step="1" value="41">
+        </label>
+        <label>Hold others constant
+          <select id="m2_sensHold">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="chk"><input id="m2_sensP" type="checkbox" checked><span>Passengers</span></div>
+        <div class="chk"><input id="m2_sensC" type="checkbox" checked><span>Cargo</span></div>
+        <div class="chk"><input id="m2_sensL" type="checkbox" checked><span>Laps</span></div>
+        <div class="chk"><input id="m2_sensWh" type="checkbox" checked><span>Wh</span></div>
+      </div>
+    </div>
+    <div><div id="m2_sensPlot" class="graph"></div></div>
+  </section>
 
-    // ---------- Rules / formulas ----------
-    function calcRAC(inches){ const ft=(inches||0)/12; return Math.max(0.90, 0.05*ft + 0.75); } // clamp per rules
-    function calcM1(success){ return success?1:0; }
-    function calcM2(p,c,L,Wh,maxNet,limits){
-      const {minP=0,maxP=1e9,minC=0,maxC=1e9}=limits||{};
-      p=Math.round(clamp(Math.floor(p),minP,maxP));
-      c=Math.round(clamp(Math.floor(c),minC,maxC));
-      L=Math.max(0,Math.floor(L));
-      const EF=(Wh||0)/100;
-      const Ip1=6, Ip2=2, Ic1=10, Ic2=8, Ce=10, Cp=0.5, Cc=2;
-      const income=p*(Ip1+Ip2*L) + c*(Ic1+Ic2*L);
-      const cost=L*(Ce + p*Cp + c*Cc)*EF;
-      const net=income - cost;
-      const score=1 + (maxNet>0? net/maxNet : 0);
-      return {EF,income,cost,net,score,p,c,L,Wh};
-    }
-    function calcM3(L,len,RAC,maxLLR){
-      L=Math.max(0,Math.floor(L));
-      const metric=(RAC>0? L*(len||0)/RAC : 0);
-      const score=2 + (maxLLR>0? metric/maxLLR : 0);
-      return {metric,score};
-    }
-    function calcGM(my,min){ my=Math.max(0.001,my||0); min=Math.max(0.001,min||0); return min/my; }
-    function calcReport(p,d){ return 0.15*(p||0) + 0.85*(d||0); }
+  <section class="card grid g3">
+    <div>
+      <div class="title">M3 Baseline Inputs</div>
+      <label>Laps (L)
+        <input id="m3_L" type="number" step="1" min="0" value="6">
+      </label>
+      <label>Banner length (in, quantized ↓¼")
+        <input id="m3_len" type="number" step="0.25" min="10" value="30">
+      </label>
+      <label>Field max of (L·Len/RAC)
+        <input id="m3_max" type="number" step="0.01" min="0.01" value="500">
+      </label>
+      <div class="row">
+        <button id="m3_reset" class="btn">Reset M3</button>
+      </div>
+    </div>
+    <div>
+      <div class="title">M3 Baseline Metrics</div>
+      <div class="grid g2">
+        <div class="metric"><div class="k">Metric (L·Len/RAC)</div><div class="v" id="m3_metric">—</div></div>
+        <div class="metric"><div class="k">M3 Score</div><div class="v" id="m3_score">—</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="title">RAC & Span</div>
+      <div class="grid g2">
+        <div class="metric"><div class="k">Wingspan (in)</div><div class="v" id="ws_v">—</div></div>
+        <div class="metric"><div class="k">RAC</div><div class="v" id="rac_v">—</div></div>
+      </div>
+    </div>
+  </section>
 
-    // ---------- Derived values & wiring ----------
-    const ws_in=$('ws_in'); const rac_txt=$('rac_txt');
+  <section class="card grid g2">
+    <div>
+      <div class="title">M3 Curves</div>
+      <div class="grid g3">
+        <label>X-Axis
+          <select id="m3_curveX">
+            <option value="L">Laps</option>
+            <option value="Len">Banner length (in)</option>
+            <option value="WS">Wingspan (in)</option>
+          </select>
+        </label>
+        <label>Range start
+          <input id="m3_curveLo" type="number" step="1" value="0">
+        </label>
+        <label>Range end
+          <input id="m3_curveHi" type="number" step="1" value="12">
+        </label>
+      </div>
+      <div class="grid g4" style="margin-top:6px">
+        <label>Step
+          <input id="m3_curveStep" type="number" step="0.25" value="1">
+        </label>
+        <div class="chk"><input id="m3_showMetric" type="checkbox" checked><span>Metric</span></div>
+        <div class="chk"><input id="m3_showScore" type="checkbox" checked><span>Score</span></div>
+      </div>
+    </div>
+    <div><div id="m3_curvePlot" class="graph"></div></div>
+  </section>
 
-    function updateAll(){
-      // Global RAC
-      const RAC=calcRAC(state.ws_in); rac_txt.textContent=fmt(RAC,2);
+  <section class="card grid g2">
+    <div>
+      <div class="title">M3 Sensitivity</div>
+      <div class="grid g3">
+        <label>± Span (%)
+          <input id="m3_sensSpan" type="number" step="1" value="50">
+        </label>
+        <label>Steps
+          <input id="m3_sensSteps" type="number" step="1" value="41">
+        </label>
+        <label>Hold others constant
+          <select id="m3_sensHold">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="chk"><input id="m3_sensL" type="checkbox" checked><span>Laps</span></div>
+        <div class="chk"><input id="m3_sensLen" type="checkbox" checked><span>Length</span></div>
+        <div class="chk"><input id="m3_sensWS" type="checkbox" checked><span>Wingspan</span></div>
+      </div>
+    </div>
+    <div><div id="m3_sensPlot" class="graph"></div></div>
+  </section>
+</main>
 
-      // M1
-      const M1=calcM1(state.m1_success); $('m1_score').textContent=fmt(M1,3);
-
-      // M2
-      const m2=calcM2(state.m2.p,state.m2.c,state.m2.L,state.m2.Wh,state.m2.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC});
-      $('m2_income').textContent=fmt(m2.income,2); $('m2_cost').textContent=fmt(m2.cost,2);
-      $('m2_net').textContent=fmt(m2.net,2); $('m2_ef').textContent=fmt(m2.EF,3); $('m2_score').textContent=fmt(m2.score,3);
-
-      // M3
-      const m3=calcM3(state.m3.L,state.m3.len,RAC,state.m3.max);
-      $('m3_metric').textContent=fmt(m3.metric,2); $('m3_score').textContent=fmt(m3.score,3);
-
-      // GM
-      const GM=calcGM(state.gm.time,state.gm.min); $('gm_score').textContent=fmt(GM,3);
-
-      // Totals (for live tiles)
-      const TRS=calcReport(state.rep.prop,state.rep.design);
-      const TMS=M1 + m2.score + m3.score + GM;
-      const COMP= TRS*TMS + (state.rep.part||0);
-      ['m1','m2','m3','gm'].forEach(k=>{ const el=document.getElementById(`tms_tile_${k}`); if(el) el.textContent=fmt(TMS,3); });
-      const comp1=document.getElementById('comp_tile_m1'); if(comp1) comp1.textContent=fmt(COMP,2);
-      const compg=document.getElementById('comp_tile_gm'); if(compg) compg.textContent=fmt(COMP,2);
-
-      // Summary view
-      const rt=$('rep_total'); if(rt) rt.textContent=fmt(TRS,2);
-      const tmst=$('tms_total'); if(tmst) tmst.textContent=fmt(TMS,3);
-      const compt=$('comp_total'); if(compt) compt.textContent=fmt(COMP,2);
-
-      // Graphs
-      drawM1Graph(M1,TRS);
-      drawM2Plot(TRS); // curves or sensitivity
-      drawM3Heat(RAC);
-      drawGMGraph(GM,TRS);
-      drawStack(M1,m2.score,m3.score,GM);
-    }
-
-    // ---------- Graphs ----------
-    function drawM1Graph(M1,TRS){
-      const xs=[0,1]; const comp=xs.map(v=> TRS*(v + getM2().score + getM3().score + getGM()) + state.rep.part);
-      const data=[{x:xs,y:comp,mode:'lines+markers',name:'Competition Score',line:{width:3}}];
-      const layout={margin:{l:50,r:18,t:10,b:40},xaxis:{title:'M1 Success (0/1)',dtick:1},yaxis:{title:'Competition Score'},paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('m1_graph',data,layout,{displayModeBar:false,responsive:true});
-    }
-    function getM2(){ return calcM2(state.m2.p,state.m2.c,state.m2.L,state.m2.Wh,state.m2.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC}); }
-    function getM3(){ return calcM3(state.m3.L,state.m3.len,calcRAC(state.ws_in),state.m3.max); }
-    function getGM(){ return calcGM(state.gm.time,state.gm.min); }
-
-    // ---- M2 plotting (two modes) ----
-    function drawM2Plot(TRS){
-      const type=$('m2_graph_type').value;
-      // disable X-axis control in curves; enabled in sensitivity
-      const xlbl=$('m2_xaxis_label');
-      if(type==='sens') { $('m2_curves_ctrls').style.display='none'; $('m2_sens_ctrls').style.display='grid'; xlbl.style.opacity=1; drawM2Sensitivity(TRS); }
-      else { $('m2_curves_ctrls').style.display='grid'; $('m2_sens_ctrls').style.display='none'; xlbl.style.opacity=.4; drawM2Curves(TRS); }
-    }
-
-    // ---------- helpers for curves ----------
-    function parseRange(s, defLo, defHi){
-      try{
-        const raw = String(s || '').toLowerCase();
-        const normalized = raw.replace(/\s+/g, '').replace(/to|-|→/g, '→');
-        const parts = normalized.split('→').map(Number);
-        if (parts.length === 2 && parts.every(Number.isFinite)) return [parts[0], parts[1]];
-      } catch (e) {}
-      return [defLo, defHi];
-    }
-
-    function linspace(lo, hi, n){
-      if(n<=1) return [lo];
-      const arr=[]; const step=(hi-lo)/(n-1);
-      for(let i=0;i<n;i++) arr.push(lo + i*step);
-      return arr;
-    }
-
-    function getYFromSelection(ysel, r, baseRes, TRS){
-      const toPerc=(v0,v)=> v0===0? 0 : 100*(v-v0)/Math.abs(v0);
-      if(ysel==='score%') return toPerc(baseRes.score,r.score);
-      if(ysel==='score') return r.score;
-      if(ysel==='net%') return toPerc(baseRes.net,r.net);
-      if(ysel==='net') return r.net;
-      if(ysel==='income%') return toPerc(baseRes.income,r.income);
-      if(ysel==='cost%') return toPerc(baseRes.cost,r.cost);
-      if(ysel==='comp%' || ysel==='comp'){
-        const compBase = TRS*(calcM1(state.m1_success)+baseRes.score+getM3().score+getGM()) + state.rep.part;
-        const compNew  = TRS*(calcM1(state.m1_success)+r.score+getM3().score+getGM()) + state.rep.part;
-        return (ysel==='comp%') ? (toPerc(compBase, compNew)) : compNew;
-      }
-      return r.net;
-    }
-
-    // Standard curves: chosen Y‑metric vs one or many variables (toggle)
-    function drawM2Curves(TRS){
-      const showL=$('m2_show_L').checked, showP=$('m2_show_p').checked, showC=$('m2_show_c').checked, showWh=$('m2_show_wh').checked;
-      const [lo,hi]=parseRange($('m2_range').value,0,12);
-      const steps=Math.max(5, Math.floor(Number($('m2_curves_steps').value)||41));
-      const base={p:state.m2.p,c:state.m2.c,L:state.m2.L,Wh:state.m2.Wh,maxNet:state.m2.maxNet};
-      const baseRes=calcM2(base.p,base.c,base.L,base.Wh,base.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC});
-      const ysel=$('m2_y_metric').value;
-
-      const traces=[];
-      const addTrace=(varKey, label, isDiscrete)=>{
-        const X = linspace(lo, hi, steps);
-        const xVals=[]; const yVals=[];
-        for(const k of X){
-          let p=base.p, c=base.c, L=base.L, Wh=base.Wh;
-          if(varKey==='p') p = isDiscrete? Math.round(k) : k; 
-          if(varKey==='c') c = isDiscrete? Math.round(k) : k; 
-          if(varKey==='L') L = isDiscrete? Math.round(k) : k; 
-          if(varKey==='Wh') Wh = k; 
-          const r=calcM2(p,c,L,Wh,base.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC});
-          xVals.push(k);
-          yVals.push(getYFromSelection(ysel,r,baseRes,TRS));
-        }
-        traces.push({x:xVals,y:yVals,mode:'lines+markers',name:label,line:{width:3}});
-      };
-
-      if(showL)  addTrace('L', 'vs Laps', true);
-      if(showP)  addTrace('p', 'vs Passengers', true);
-      if(showC)  addTrace('c', 'vs Cargo', true);
-      if(showWh) addTrace('Wh','vs Wh (W‑h)', false);
-
-      // Fallback if all are off
-      if(traces.length===0){ addTrace('L','vs Laps', true); }
-
-      const yTitle = {
-        'score%':'M2 Score (%)','score':'M2 Score','net%':'Net (%)','net':'Net','income%':'Income (%)','cost%':'Cost (%)','comp%':'Competition (%)','comp':'Competition'
-      }[ysel]||'Value';
-
-      const layout={margin:{l:58,r:18,t:10,b:48},xaxis:{title:'Input value'},yaxis:{title:yTitle},legend:{orientation:'h',y:-.2},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('m2_graph',traces,layout,{displayModeBar:false,responsive:true});
-    }
-
-    // Sensitivity: % change in metric vs % change along a multi-parameter path
-    function phi(t,shape,k){ // t in [-1,1]
-      if(shape==='linear') return t;
-      if(shape==='quad') return Math.sign(t)*t*t;
-      if(shape==='cube') return t*t*t;
-      if(shape==='sqrt') return Math.sign(t)*Math.sqrt(Math.abs(t));
-      if(shape==='exp'){
-        const K=Math.max(0.1,Number(k)||2);
-        if(t===0) return 0;
-        const s=Math.sign(t); const a=Math.exp(K*Math.abs(t))-1; const b=Math.exp(K)-1; return s*(a/b);
-      }
-      return 0; // off/hold
-    }
-
-    function drawM2Sensitivity(TRS){
-      const span=Math.max(1,Math.abs(Number($('m2_span').value)||50));
-      const steps=Math.max(5,Math.floor(Number($('m2_steps').value)||41));
-      const includeComp= $('m2_include_comp').value==='1';
-      const kexp= Number($('m2_exp_k').value)||2;
-      const shapes={p:$('m2_shape_p').value, c:$('m2_shape_c').value, L:$('m2_shape_L').value, Wh:$('m2_shape_wh').value};
-      const xsel=$('m2_x_metric').value; const ysel=$('m2_y_metric').value;
-
-      const base={p:state.m2.p,c:state.m2.c,L:state.m2.L,Wh:state.m2.Wh,maxNet:state.m2.maxNet};
-      const baseRes=calcM2(base.p,base.c,base.L,base.Wh,base.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC});
-      const baseM3=getM3(); const baseGM=getGM();
-      const baseTRS=TRS;
-      const baseComp= baseTRS*(calcM1(state.m1_success)+baseRes.score+baseM3.score+baseGM)+state.rep.part;
-
-      const X=[], Y=[];
-      const toPerc=(v0,v)=> v0===0? 0 : 100*(v-v0)/Math.abs(v0);
-
-      for(let i=0;i<steps;i++){
-        const t = -span + (2*span)*(i/(steps-1)); // percent
-        const tn = t/100; // [-1,1]
-        // parameter updates per shape
-        const p = (shapes.p==='off'? base.p : Math.round(base.p*(1+phi(tn,shapes.p,kexp))));
-        const c = (shapes.c==='off'? base.c : Math.round(base.c*(1+phi(tn,shapes.c,kexp))));
-        const L = (shapes.L==='off'? base.L : Math.round(base.L*(1+phi(tn,shapes.L,kexp))));
-        const Wh= (shapes.Wh==='off'? base.Wh: base.Wh*(1+phi(tn,shapes.Wh,kexp)));
-        const r=calcM2(p,c,L,Wh,base.maxNet,{minP:state.m2.minP,maxP:state.m2.maxP,minC:state.m2.minC,maxC:state.m2.maxC});
-
-        const comp = includeComp? (baseTRS*(calcM1(state.m1_success)+r.score+baseM3.score+baseGM)+state.rep.part) : null;
-
-        // axes
-        let x;
-        const pPerc = toPerc(base.p,r.p);
-        const cPerc = toPerc(base.c,r.c);
-        const LPerc = toPerc(base.L,r.L);
-        const WhPerc= toPerc(base.Wh,Wh);
-        if(xsel==='t%') x = t;
-        else if(xsel==='p%') x=pPerc; else if(xsel==='c%') x=cPerc; else if(xsel==='L%') x=LPerc; else if(xsel==='Wh%') x=WhPerc;
-        else if(xsel==='p') x=r.p; else if(xsel==='c') x=r.c; else if(xsel==='L') x=r.L; else x=Wh;
-
-        let y;
-        if(ysel==='score%') y=toPerc(baseRes.score,r.score);
-        else if(ysel==='score') y=r.score;
-        else if(ysel==='net%') y=toPerc(baseRes.net,r.net);
-        else if(ysel==='net') y=r.net;
-        else if(ysel==='income%') y=toPerc(baseRes.income,r.income);
-        else if(ysel==='cost%') y=toPerc(baseRes.cost,r.cost);
-        else if(ysel==='comp%') y=includeComp? toPerc(baseComp,comp): 0;
-        else if(ysel==='comp') y=includeComp? comp : 0;
-        X.push(x); Y.push(y);
-      }
-
-      const yTitle = {
-        'score%':'M2 Score (%)','score':'M2 Score','net%':'Net (%)','net':'Net','income%':'Income (%)','cost%':'Cost (%)','comp%':'Competition (%)','comp':'Competition'
-      }[ysel]||'Value';
-      const xTitle = {
-        't%':'Path % change','p%':'Passengers (%)','c%':'Cargo (%)','L%':'Laps (%)','Wh%':'Wh (%)','p':'Passengers','c':'Cargo','L':'Laps','Wh':'Wh'
-      }[xsel]||'t';
-
-      const data=[{x:X,y:Y,mode:'lines+markers',name:`${yTitle} vs ${xTitle}`,line:{width:3}}];
-      const layout={margin:{l:58,r:18,t:10,b:48},xaxis:{title:xTitle},yaxis:{title:yTitle},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('m2_graph',data,layout,{displayModeBar:false,responsive:true});
-    }
-
-    // Existing M3 heatmap
-    function drawM3Heat(RAC){
-      const Lmax=Math.max(0,Math.floor(Number($('m3_lap_hi').value)||10));
-      const lenLo=Number($('m3_len_lo').value)||10; const lenHi=Number($('m3_len_hi').value)||60;
-      const xs=Array.from({length:Lmax+1},(_,i)=>i), ys=[], z=[];
-      for(let len=lenLo; len<=lenHi; len+=1){ ys.push(len); const row=[]; for(let L=0; L<=Lmax; L++){ row.push(L*len/RAC); } z.push(row); }
-      const data=[{z, x:xs, y:ys, type:'heatmap', hoverongaps:false, colorbar:{title:'L·Len / RAC'}}];
-      const layout={margin:{l:60,r:18,t:10,b:44},xaxis:{title:'Laps',dtick:1},yaxis:{title:'Banner length (in)'},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('m3_graph',data,layout,{displayModeBar:false,responsive:true});
-    }
-
-    function drawGMGraph(GM,TRS){
-      const data=[{type:'indicator',mode:'gauge+number',value:GM,title:{text:'GM Score'},gauge:{axis:{range:[0,Math.max(1,GM)]}}}];
-      const layout={margin:{l:30,r:30,t:10,b:10},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('gm_graph',data,layout,{displayModeBar:false,responsive:true});
-    }
-
-    function drawStack(M1,M2,M3,GM){
-      const data=[{x:['M1','M2','M3','GM'], y:[M1,M2,M3,GM], type:'bar', text:[M1,M2,M3,GM].map(v=>fmt(v,3)), textposition:'auto'}];
-      const layout={margin:{l:52,r:18,t:10,b:40},yaxis:{title:'Score'},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
-      Plotly.react('stack_graph',data,layout,{displayModeBar:false,responsive:true});
-    }
-
-    // ---------- Nav logic ----------
-    function show(view){
-      document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
-      document.querySelectorAll('.view').forEach(v=> v.style.display = (v.id===`view-${view}`?'block':'none'));
-      updateAll();
-      localStorage.setItem('dbf_last_view',view);
-    }
-
-    document.getElementById('nav').addEventListener('click', (e)=>{
-      if(e.target.tagName==='BUTTON'){ show(e.target.dataset.view); }
-    });
-
-    // Keyboard: ←/→ to change sections
-    window.addEventListener('keydown', (e)=>{
-      if(['ArrowLeft','ArrowRight'].includes(e.key)){
-        const cur=document.querySelector('.seg button.active');
-        const arr=[...document.querySelectorAll('.seg button')];
-        let i=arr.indexOf(cur); i += (e.key==='ArrowRight'? 1 : -1); if(i<0) i=arr.length-1; if(i>=arr.length) i=0; show(arr[i].dataset.view);
-      }
-    });
-
-    // ---------- Inputs wiring ----------
-    ws_in.addEventListener('input', ()=>{ state.ws_in=Number(ws_in.value)||0; updateAll(); });
-
-    $('m1_success').addEventListener('input', (e)=>{ state.m1_success=Number(e.target.value)||0; updateAll(); });
-
-    ['m2_pax','m2_cargo','m2_laps','m2_wh','m2_maxnet'].forEach(id=>{
-      $(id).addEventListener('input', ()=>{
-        state.m2.p=Number($('m2_pax').value)||0; state.m2.c=Number($('m2_cargo').value)||0; state.m2.L=Number($('m2_laps').value)||0; state.m2.Wh=Number($('m2_wh').value)||0; state.m2.maxNet=Number($('m2_maxnet').value)||1; updateAll();
-      });
-    });
-    ['m2_min_p','m2_max_p','m2_min_c','m2_max_c'].forEach(id=>{
-      $(id).addEventListener('input', ()=>{
-        state.m2.minP=Math.max(0,Math.floor(Number($('m2_min_p').value)||0));
-        state.m2.maxP=Math.max(state.m2.minP,Math.floor(Number($('m2_max_p').value)||50));
-        state.m2.minC=Math.max(0,Math.floor(Number($('m2_min_c').value)||0));
-        state.m2.maxC=Math.max(state.m2.minC,Math.floor(Number($('m2_max_c').value)||30));
-        updateAll();
-      });
-    });
-
-    // Graph mode selectors
-    ['m2_graph_type','m2_y_metric','m2_x_metric'].forEach(id=> $(id).addEventListener('input', ()=> drawM2Plot(calcReport(state.rep.prop,state.rep.design))));
-
-    // Curves: toggles and ranges
-    ['m2_show_L','m2_show_p','m2_show_c','m2_show_wh','m2_range','m2_curves_steps'].forEach(id=> $(id).addEventListener('input', ()=> drawM2Curves(calcReport(state.rep.prop,state.rep.design))));
-
-    // Sensitivity controls
-    ['m2_span','m2_steps','m2_include_comp','m2_exp_k','m2_shape_p','m2_shape_c','m2_shape_L','m2_shape_wh'].forEach(id=> $(id).addEventListener('input', ()=> drawM2Sensitivity(calcReport(state.rep.prop,state.rep.design))));
-
-    $('m2_play').addEventListener('click', toggleM2Play);
-
-    ['m3_laps','m3_len','m3_max'].forEach(id=>{
-      $(id).addEventListener('input', ()=>{ state.m3.L=Number($('m3_laps').value)||0; state.m3.len=Number($('m3_len').value)||0; state.m3.max=Number($('m3_max').value)||1; updateAll(); });
-    });
-    ['m3_lap_hi','m3_len_lo','m3_len_hi'].forEach(id=> $(id).addEventListener('input', ()=> drawM3Heat(calcRAC(state.ws_in))));
-
-    ['gm_time','gm_min'].forEach(id=> $(id).addEventListener('input', ()=>{ state.gm.time=Number($('gm_time').value)||0; state.gm.min=Number($('gm_min').value)||0; updateAll(); }));
-
-    ['rep_prop','rep_design','part'].forEach(id=> $(id).addEventListener('input', ()=>{ state.rep.prop=Number($('rep_prop').value)||0; state.rep.design=Number($('rep_design').value)||0; state.rep.part=Number($('part').value)||0; updateAll(); }));
-
-    // ---------- Rules modal ----------
-    const rulesDialog=$('rulesDialog');
-    $('openRules').addEventListener('click', ()=> rulesDialog.showModal());
-    $('closeRules').addEventListener('click', ()=> rulesDialog.close());
-
-    // ---------- Animation for curves mode ----------
-    let m2Timer=null; let m2PlayDir=1;
-    function selectedCurveVars(){
-      const arr=[]; if($('m2_show_L').checked) arr.push('L'); if($('m2_show_p').checked) arr.push('p'); if($('m2_show_c').checked) arr.push('c'); if($('m2_show_wh').checked) arr.push('Wh');
-      return arr.length? arr : ['L'];
-    }
-    function toggleM2Play(){
-      const btn=$('m2_play');
-      const type=$('m2_graph_type').value;
-      if(type==='sens'){ btn.textContent='▶︎ Animate'; return; } // animation only for curves
-      if(m2Timer){ clearInterval(m2Timer); m2Timer=null; btn.textContent='▶︎ Animate'; return; }
-      const vars=selectedCurveVars(); const varKey=vars[0];
-      const [lo,hi]=parseRange($('m2_range').value,0,12); const steps=Math.max(5,Math.floor(Number($('m2_curves_steps').value)||41));
-      const seq=linspace(lo,hi,steps);
-      let idx=0; m2PlayDir=1; btn.textContent='❚❚ Pause';
-      m2Timer=setInterval(()=>{
-        const k=seq[idx];
-        if(varKey==='p') state.m2.p=Math.round(k);
-        if(varKey==='c') state.m2.c=Math.round(k);
-        if(varKey==='L') state.m2.L=Math.round(k);
-        if(varKey==='Wh') state.m2.Wh=k;
-        idx+=m2PlayDir; if(idx>=seq.length-1 || idx<=0) m2PlayDir*=-1; updateAll();
-      }, 450);
-    }
-
-    // ---------- Init ----------
-    function initFromInputs(){
-      state.ws_in=Number(ws_in.value)||60;
-      state.m1_success=Number($('m1_success').value)||1;
-      state.m2={p:Number($('m2_pax').value)||6, c:Number($('m2_cargo').value)||2, L:Number($('m2_laps').value)||5, Wh:Number($('m2_wh').value)||80, maxNet:Number($('m2_maxnet').value)||1000,
-                minP:Number($('m2_min_p').value)||0, maxP:Number($('m2_max_p').value)||50, minC:Number($('m2_min_c').value)||0, maxC:Number($('m2_max_c').value)||30 };
-      state.m3={L:Number($('m3_laps').value)||6, len:Number($('m3_len').value)||30, max:Number($('m3_max').value)||500};
-      state.gm={time:Number($('gm_time').value)||75, min:Number($('gm_min').value)||60};
-      state.rep={prop:Number($('rep_prop').value)||85, design:Number($('rep_design').value)||92, part:Number($('part').value)||3};
-    }
-
-    initFromInputs();
-    updateAll();
-    show(localStorage.getItem('dbf_last_view')||'m2');
-  </script>
+<script>
+  const $=id=>document.getElementById(id)
+  const clamp=(x,a,b)=>Math.min(Math.max(Number(x)||0,a),b)
+  const fmt=(x,d=2)=>isFinite(x)?Number(x).toFixed(d):"—"
+  const qQuarter=x=>Math.floor((Number(x)||0)*4)/4
+  const roundInch=x=>Math.round(Number(x)||0)
+  function calcRAC(inches){const s=clamp(roundInch(inches),0,60);const ft=s/12;return {ws:s,rac:Math.max(0.90,0.05*ft+0.75)}}
+  function calcM1(s){return Number(s)?1:0}
+  function calcM2(p,c,L,Wh,MaxNet,limits){const minP=Math.max(0,Math.floor(Number(limits.minP)||0));const maxP=Math.max(minP,Math.floor(Number(limits.maxP)||0));const minC=Math.max(0,Math.floor(Number(limits.minC)||0));const maxC=Math.max(minC,Math.floor(Number(limits.maxC)||0));p=clamp(Math.round(p),minP,maxP);c=clamp(Math.round(c),minC,maxC);L=Math.max(0,Math.round(Number(L)||0));const WhC=clamp(Wh,0,100);const EF=WhC/100;const Ip1=6,Ip2=2,Ic1=10,Ic2=8,Ce=10,Cp=0.5,Cc=2;const income=p*(Ip1+Ip2*L)+c*(Ic1+Ic2*L);const cost=L*(Ce+p*Cp+c*Cc)*EF;const net=income-cost;const score=1+((Number(MaxNet)>0)?net/Number(MaxNet):0);return {p,c,L,Wh:WhC,EF,income,cost,net,score}}
+  function calcM3(L,lenIn,RAC,maxLLR){L=Math.max(0,Math.round(Number(L)||0));const len=qQuarter(lenIn);const metric=(RAC>0)?L*len/RAC:0;const score=2+((Number(maxLLR)>0)?metric/Number(maxLLR):0);return {L,lenQ:len,metric,score}}
+  function calcGM(my,min){const a=Math.max(0.001,Number(my)||0.001),b=Math.max(0.001,Number(min)||0.001);return b/a}
+  function calcReport(p,d){return 0.15*(Number(p)||0)+0.85*(Number(d)||0)}
+  function totals(){const rR=calcRAC($("ws").value);const M1=calcM1($("m1s").value);const m2=calcM2($("m2_p").value,$("m2_c").value,$("m2_L").value,$("m2_Wh").value,$("m2_MaxNet").value,{minP:$("m2_minP").value,maxP:$("m2_maxP").value,minC:$("m2_minC").value,maxC:$("m2_maxC").value});const m3=calcM3($("m3_L").value,$("m3_len").value,rR.rac,$("m3_max").value);const GM=calcGM($("gm_time").value,$("gm_min").value);const TR=calcReport($("prop").value,$("design").value);const PART=clamp($("part").value,0,3);const TMS=M1+m2.score+m3.score+GM;const COMP=TR*TMS+PART;return {rR,M1,m2,m3,GM,TR,PART,TMS,COMP}}
+  function updateSummary(){const t=totals();$("racPill").textContent="RAC "+fmt(t.rR.rac,2);$("m1_v").textContent=fmt(t.M1,3);$("gm_v").textContent=fmt(t.GM,3);$("rep_v").textContent=fmt(t.TR,2);$("tms_v").textContent=fmt(t.TMS,3);$("comp_v").textContent=fmt(t.COMP,2);$("ws_v").textContent=t.rR.ws;$("rac_v").textContent=fmt(t.rR.rac,2)}
+  function updateM2(){const t=totals();$("m2_income").textContent=fmt(t.m2.income,2);$("m2_cost").textContent=fmt(t.m2.cost,2);$("m2_net").textContent=fmt(t.m2.net,2);$("m2_score").textContent=fmt(t.m2.score,3);$("m2_ef_pill").textContent="EF "+fmt(t.m2.EF,3)}
+  function updateM3(){const t=totals();$("m3_metric").textContent=fmt(t.m3.metric,2);$("m3_score").textContent=fmt(t.m3.score,3)}
+  function drawM2Curves(){const base=totals().m2;let lo=Number($("m2_curveLo").value),hi=Number($("m2_curveHi").value),step=Math.abs(Number($("m2_curveStep").value)||1);if(step===0)step=1;if(hi<lo){const z=lo;lo=hi;hi=z}const xSel=$("m2_curveX").value;const xs=[],yi=[],yc=[],yn=[],ys=[];const lim={minP:$("m2_minP").value,maxP:$("m2_maxP").value,minC:$("m2_minC").value,maxC:$("m2_maxC").value};for(let x=lo;x<=hi+1e-12;x+=step){let p=base.p,c=base.c,L=base.L,Wh=base.Wh;if(xSel==="p")p=Math.round(x);if(xSel==="c")c=Math.round(x);if(xSel==="L")L=Math.round(x);if(xSel==="Wh")Wh=Number(x);const r=calcM2(p,c,L,Wh,$("m2_MaxNet").value,lim);xs.push(xSel==="Wh"?Number(x):Math.round(x));yi.push(r.income);yc.push(r.cost);yn.push(r.net);ys.push(r.score)}const traces=[];if($("m2_showIncome").checked)traces.push({x:xs,y:yi,name:"Income",mode:"lines",line:{width:3}});if($("m2_showCost").checked)traces.push({x:xs,y:yc,name:"Cost",mode:"lines",line:{width:3}});if($("m2_showNet").checked)traces.push({x:xs,y:yn,name:"Net",mode:"lines",line:{width:3}});if($("m2_showScore").checked)traces.push({x:xs,y:ys,name:"Score",mode:"lines",line:{width:3}});const xlabel={p:"Passengers",c:"Cargo",L:"Laps",Wh:"Wh"}[xSel];const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:xlabel,gridcolor:"#ebeff6"},yaxis:{title:"Value",gridcolor:"#ebeff6"},legend:{orientation:"h"}};Plotly.react("m2_curvePlot",traces,layout,{displayModeBar:false,responsive:true})}
+  function drawM2Sensitivity(){const base=totals().m2;const baseScore=base.score;const span=Math.max(1,Math.abs(Number($("m2_sensSpan").value)||50));const steps=Math.max(5,Math.floor(Number($("m2_sensSteps").value)||41));const lim={minP:$("m2_minP").value,maxP:$("m2_maxP").value,minC:$("m2_minC").value,maxC:$("m2_maxC").value};const hold=$("m2_sensHold").value==="1";const sel={p:$("m2_sensP").checked,c:$("m2_sensC").checked,L:$("m2_sensL").checked,Wh:$("m2_sensWh").checked};const traces=[];const add=(key,label,disc)=>{const X=[],Y=[];for(let i=0;i<steps;i++){const pct=-span+(2*span)*i/(steps-1);let p=base.p,c=base.c,L=base.L,Wh=base.Wh;if(key==="p")p=disc?clamp(Math.round(base.p*(1+pct/100)),Number(lim.minP),Number(lim.maxP)):base.p;if(key==="c")c=disc?clamp(Math.round(base.c*(1+pct/100)),Number(lim.minC),Number(lim.maxC)):base.c;if(key==="L")L=disc?Math.max(0,Math.round(base.L*(1+pct/100))):base.L;if(key==="Wh")Wh=base.Wh*(1+pct/100);if(!hold){if(key!=="p")p=disc?clamp(Math.round(base.p*(1+pct/100)),Number(lim.minP),Number(lim.maxP)):p;if(key!=="c")c=disc?clamp(Math.round(base.c*(1+pct/100)),Number(lim.minC),Number(lim.maxC)):c;if(key!=="L")L=disc?Math.max(0,Math.round(base.L*(1+pct/100))):L;if(key!=="Wh")Wh=base.Wh*(1+pct/100)}const r=calcM2(p,c,L,Wh,$("m2_MaxNet").value,lim);const dy=baseScore===0?0:100*(r.score-baseScore)/Math.abs(baseScore);X.push(pct);Y.push(dy)}traces.push({x:X,y:Y,name:label,mode:"lines",line:{width:3}})};if(sel.p)add("p","Passengers",true);if(sel.c)add("c","Cargo",true);if(sel.L)add("L","Laps",true);if(sel.Wh)add("Wh","Wh",false);const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:"% change in parameter",gridcolor:"#ebeff6"},yaxis:{title:"% change in Score",gridcolor:"#ebeff6"},legend:{orientation:"h"}};Plotly.react("m2_sensPlot",traces,layout,{displayModeBar:false,responsive:true})}
+  function drawM3Curves(){const baseT=totals();const base=baseT.m3;let lo=Number($("m3_curveLo").value),hi=Number($("m3_curveHi").value),step=Math.abs(Number($("m3_curveStep").value)||1);if(step===0)step=1;if(hi<lo){const z=lo;lo=hi;hi=z}const xSel=$("m3_curveX").value;const xs=[],ym=[],ys=[];for(let x=lo;x<=hi+1e-12;x+=step){let L=base.L,len=base.lenQ,ws=baseT.rR.ws;let rac=baseT.rR.rac;if(xSel==="L")L=Math.max(0,Math.round(x));if(xSel==="Len"){len=qQuarter(x)}if(xSel==="WS"){ws=clamp(Math.round(x),0,60);rac=calcRAC(ws).rac}const r=calcM3(L,len,rac,$("m3_max").value);xs.push(xSel==="Len"?qQuarter(x):Math.round(x));ym.push(r.metric);ys.push(r.score)}const traces=[];if($("m3_showMetric").checked)traces.push({x:xs,y:ym,name:"Metric",mode:"lines",line:{width:3}});if($("m3_showScore").checked)traces.push({x:xs,y:ys,name:"Score",mode:"lines",line:{width:3}});const xlabel={L:"Laps",Len:"Banner length (in)",WS:"Wingspan (in)"}[xSel];const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:xlabel,gridcolor:"#ebeff6"},yaxis:{title:"Value",gridcolor:"#ebeff6"},legend:{orientation:"h"}};Plotly.react("m3_curvePlot",traces,layout,{displayModeBar:false,responsive:true})}
+  function drawM3Sensitivity(){const T=totals();const base=T.m3;const baseScore=base.score;const baseWS=T.rR.ws;const baseRAC=T.rR.rac;const span=Math.max(1,Math.abs(Number($("m3_sensSpan").value)||50));const steps=Math.max(5,Math.floor(Number($("m3_sensSteps").value)||41));const hold=$("m3_sensHold").value==="1";const sel={L:$("m3_sensL").checked,Len:$("m3_sensLen").checked,WS:$("m3_sensWS").checked};const traces=[];const add=(key,label)=>{const X=[],Y=[];for(let i=0;i<steps;i++){const pct=-span+(2*span)*i/(steps-1);let L=base.L,len=base.lenQ,ws=baseWS,rac=baseRAC;if(key==="L")L=Math.max(0,Math.round(base.L*(1+pct/100)));if(key==="Len")len=qQuarter(base.lenQ*(1+pct/100));if(key==="WS"){ws=clamp(Math.round(baseWS*(1+pct/100)),0,60);rac=calcRAC(ws).rac}if(!hold){if(key!=="L")L=Math.max(0,Math.round(base.L*(1+pct/100)));if(key!=="Len")len=qQuarter(base.lenQ*(1+pct/100));if(key!=="WS"){ws=clamp(Math.round(baseWS*(1+pct/100)),0,60);rac=calcRAC(ws).rac}}const r=calcM3(L,len,rac,$("m3_max").value);const dy=baseScore===0?0:100*(r.score-baseScore)/Math.abs(baseScore);X.push(pct);Y.push(dy)}traces.push({x:X,y:Y,name:label,mode:"lines",line:{width:3}})};if(sel.L)add("L","Laps");if(sel.Len)add("Len","Length");if(sel.WS)add("WS","Wingspan");const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:"% change in parameter",gridcolor:"#ebeff6"},yaxis:{title:"% change in Score",gridcolor:"#ebeff6"},legend:{orientation:"h"}};Plotly.react("m3_sensPlot",traces,layout,{displayModeBar:false,responsive:true})}
+  function syncAll(){updateSummary();updateM2();updateM3();drawM2Curves();drawM2Sensitivity();drawM3Curves();drawM3Sensitivity()}
+  ;["ws","prop","design","part","m1s","gm_time","gm_min","m2_p","m2_c","m2_L","m2_Wh","m2_MaxNet","m2_minP","m2_maxP","m2_minC","m2_maxC","m2_curveX","m2_curveLo","m2_curveHi","m2_curveStep","m2_showIncome","m2_showCost","m2_showNet","m2_showScore","m2_sensSpan","m2_sensSteps","m2_sensHold","m2_sensP","m2_sensC","m2_sensL","m2_sensWh","m3_L","m3_len","m3_max","m3_curveX","m3_curveLo","m3_curveHi","m3_curveStep","m3_showMetric","m3_showScore","m3_sensSpan","m3_sensSteps","m3_sensHold","m3_sensL","m3_sensLen","m3_sensWS"].forEach(id=>$(id).addEventListener("input",syncAll))
+  $("m2_reset").addEventListener("click",()=>{$("m2_p").value=6;$("m2_c").value=2;$("m2_L").value=5;$("m2_Wh").value=80;$("m2_MaxNet").value=1000;$("m2_minP").value=0;$("m2_maxP").value=50;$("m2_minC").value=0;$("m2_maxC").value=30;$("m2_curveX").value="L";$("m2_curveLo").value=0;$("m2_curveHi").value=12;$("m2_curveStep").value=1;$("m2_showIncome").checked=true;$("m2_showCost").checked=true;$("m2_showNet").checked=true;$("m2_showScore").checked=true;$("m2_sensSpan").value=50;$("m2_sensSteps").value=41;$("m2_sensHold").value="1";$("m2_sensP").checked=true;$("m2_sensC").checked=true;$("m2_sensL").checked=true;$("m2_sensWh").checked=true;syncAll()})
+  $("m3_reset").addEventListener("click",()=>{$("m3_L").value=6;$("m3_len").value=30;$("m3_max").value=500;$("m3_curveX").value="L";$("m3_curveLo").value=0;$("m3_curveHi").value=12;$("m3_curveStep").value=1;$("m3_showMetric").checked=true;$("m3_showScore").checked=true;$("m3_sensSpan").value=50;$("m3_sensSteps").value=41;$("m3_sensHold").value="1";$("m3_sensL").checked=true;$("m3_sensLen").checked=true;$("m3_sensWS").checked=true;syncAll()})
+  $("reset_all").addEventListener("click",()=>{$("ws").value=60;$("prop").value=85;$("design").value=92;$("part").value=3;$("m1s").value="1";$("gm_time").value=75;$("gm_min").value=60;document.getElementById("m2_reset").click();document.getElementById("m3_reset").click()})
+  syncAll()
+</script>
 </body>
 </html>
