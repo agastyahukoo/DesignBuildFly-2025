@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DBF Mission Lab — One‑Mission Focus</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f19; --surface:#0f1422; --ink:#eaf0f7; --muted:#a2b0c5; --line:rgba(255,255,255,.08);
+      --accent:#6aa8ff; --accent-2:#98ffc9; --warn:#ffb25a; --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,Arial;color:var(--ink);
+      background:radial-gradient(1400px 900px at 12% -10%,#1b2440 0%,var(--bg) 55%) fixed}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);
+      background:linear-gradient(180deg,rgba(11,15,25,.9),rgba(11,15,25,.6) 70%,rgba(11,15,25,0));
+      border-bottom:1px solid var(--line)}
+    .bar{display:flex;align-items:center;gap:16px;padding:14px 18px}
+    .logo{display:flex;align-items:center;gap:10px}
+    .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(180deg,var(--accent),#3d79ff);box-shadow:0 0 20px rgba(101,161,255,.6)}
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .flex{flex:1}
+    .seg{display:inline-flex;background:linear-gradient(180deg,#151b2c,#0e1422);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .seg button{appearance:none;border:0;background:transparent;color:var(--ink);padding:8px 14px;font-size:13px;cursor:pointer}
+    .seg button.active{background:linear-gradient(180deg,#1d2744,#121a30)}
+    .right{display:flex;gap:8px}
+    .btn{appearance:none;border:1px solid var(--line);background:#0e1423;color:var(--ink);padding:8px 12px;border-radius:12px;cursor:pointer}
+
+    /* Global controls */
+    .global{display:flex;gap:12px;align-items:center;padding:0 18px 12px}
+    .kv{display:flex;gap:8px;align-items:center}
+    .kv label{font-size:12px;color:var(--muted)}
+    .kv input{width:120px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0e1423;color:var(--ink)}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1524;font-size:12px}
+
+    main{padding:16px;max-width:1200px;margin:0 auto}
+    .view{display:none}
+    .card{background:linear-gradient(180deg,#131a2e,#0f1527);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel{padding:18px}
+    h2{margin:0 0 8px;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .col{display:grid;gap:12px}
+    label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#0e1423;color:var(--ink);outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(101,161,255,.18)}
+    .help{font-size:12px;color:var(--muted)}
+    .metric{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+    .metric .k{font-size:12px;color:var(--muted);text-transform:uppercase}
+    .metric .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:.2px}
+    .stack{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px}
+    .graph{height:420px}
+
+    @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+
+    /* Modal */
+    dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:#0f1524;color:var(--ink);width:min(920px,94vw)}
+    .modal-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+    .modal-b{padding:0;height:min(75vh,720px)}
+    .modal-b iframe{width:100%;height:100%;border:0;border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="logo"><div class="dot"></div><h1>DBF Mission Lab</h1></div>
+      <div class="flex"></div>
+      <div class="seg" id="nav">
+        <button data-view="m1" class="active">M1</button>
+        <button data-view="m2">M2</button>
+        <button data-view="m3">M3</button>
+        <button data-view="gm">GM</button>
+        <button data-view="summary">Summary</button>
+      </div>
+      <div class="right">
+        <button class="btn" id="openRules">Rules PDF</button>
+      </div>
+    </div>
+    <div class="global">
+      <div class="kv">
+        <label for="ws_in">Wingspan (in)</label>
+        <input id="ws_in" type="number" step="0.25" min="0" value="60"/>
+      </div>
+      <div class="kv"><span class="pill">RAC <span id="rac_txt">—</span></span></div>
+      <div class="help">RAC = 0.05 × WS<sub>(ft)</sub> + 0.75. (Change wingspan anytime; all missions update.)</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- M1 View -->
+    <section class="view" id="view-m1">
+      <div class="card panel">
+        <h2>Mission 1 — Test Flight</h2>
+        <div class="grid">
+          <div class="col">
+            <label>Successful mission?
+              <select id="m1_success">
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </label>
+            <div class="stack">
+              <div class="metric"><div class="k">M1 Score</div><div class="v" id="m1_score">—</div></div>
+              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m1">—</div></div>
+              <div class="metric"><div class="k">Competition (live)</div><div class="v" id="comp_tile_m1">—</div></div>
+            </div>
+            <div class="help">If successful, M1 = 1; otherwise 0.</div>
+          </div>
+          <div class="col">
+            <div id="m1_graph" class="graph"></div>
+            <div class="help">Visualizes how the overall competition score reacts to M1 success/failure with your current report scores.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- M2 View -->
+    <section class="view" id="view-m2">
+      <div class="card panel">
+        <h2>Mission 2 — Charter Flight</h2>
+        <div class="grid">
+          <div class="col">
+            <label># Passengers<input id="m2_pax" type="number" step="1" min="0" value="6"/></label>
+            <label># Cargo (hockey pucks)<input id="m2_cargo" type="number" step="1" min="0" value="2"/></label>
+            <label># Laps<input id="m2_laps" type="number" step="1" min="0" value="5"/></label>
+            <label>Total Propulsion Capacity (W‑h)<input id="m2_wh" type="number" step="0.1" min="1" value="80"/></label>
+            <label>Best Net Income in field (Max_Net_Income)<input id="m2_maxnet" type="number" step="0.01" min="0.01" value="1000"/></label>
+
+            <div class="stack">
+              <div class="metric"><div class="k">Income</div><div class="v" id="m2_income">—</div></div>
+              <div class="metric"><div class="k">Cost</div><div class="v" id="m2_cost">—</div></div>
+              <div class="metric"><div class="k">Net</div><div class="v" id="m2_net">—</div></div>
+            </div>
+            <div class="stack" style="margin-top:6px">
+              <div class="metric"><div class="k">EF</div><div class="v" id="m2_ef">—</div></div>
+              <div class="metric"><div class="k">M2 Score</div><div class="v" id="m2_score">—</div></div>
+              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m2">—</div></div>
+            </div>
+
+            <div class="help">Income = p·(6 + 2L) + c·(10 + 8L). Cost = L·(10 + 0.5p + 2c)·(Wh/100). M2 = 1 + Net/Max<sub>Net</sub>.</div>
+          </div>
+          <div class="col">
+            <div class="grid" style="grid-template-columns:1fr 1fr">
+              <label>Sweep Variable
+                <select id="m2_sweep">
+                  <option value="laps" selected>Laps</option>
+                  <option value="pax">Passengers</option>
+                  <option value="cargo">Cargo</option>
+                </select>
+              </label>
+              <label>Range (start→end)
+                <input id="m2_range" type="text" value="0→12"/>
+              </label>
+            </div>
+            <div id="m2_graph" class="graph"></div>
+            <div class="grid" style="grid-template-columns:auto auto auto;align-items:center">
+              <button class="btn" id="m2_play">▶︎ Animate</button>
+              <div class="help">Hover to inspect values. Shaded area indicates negative net income.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- M3 View -->
+    <section class="view" id="view-m3">
+      <div class="card panel">
+        <h2>Mission 3 — Banner Flight</h2>
+        <div class="grid">
+          <div class="col">
+            <label># Laps<input id="m3_laps" type="number" step="1" min="0" value="6"/></label>
+            <label>Banner length (in)<input id="m3_len" type="number" step="0.5" min="10" value="30"/></label>
+            <label>Field max of (L·Len/RAC) <input id="m3_max" type="number" step="0.01" min="0.01" value="500"/></label>
+            <div class="stack">
+              <div class="metric"><div class="k">Metric (L·Len/RAC)</div><div class="v" id="m3_metric">—</div></div>
+              <div class="metric"><div class="k">M3 Score</div><div class="v" id="m3_score">—</div></div>
+              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_m3">—</div></div>
+            </div>
+            <div class="help">M3 = 2 + (L·Len/RAC)/Max. Use the heatmap to explore design space.</div>
+          </div>
+          <div class="col">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+              <label>Laps Max<input id="m3_lap_hi" type="number" step="1" value="10"/></label>
+              <label>Banner min (in)<input id="m3_len_lo" type="number" step="0.5" value="10"/></label>
+              <label>Banner max (in)<input id="m3_len_hi" type="number" step="0.5" value="60"/></label>
+            </div>
+            <div id="m3_graph" class="graph"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GM View -->
+    <section class="view" id="view-gm">
+      <div class="card panel">
+        <h2>Ground Mission (GM)</h2>
+        <div class="grid">
+          <div class="col">
+            <label>Your time (s)<input id="gm_time" type="number" step="0.01" min="0.01" value="75"/></label>
+            <label>Fastest time in field (s)<input id="gm_min" type="number" step="0.01" min="0.01" value="60"/></label>
+            <div class="stack">
+              <div class="metric"><div class="k">GM Score</div><div class="v" id="gm_score">—</div></div>
+              <div class="metric"><div class="k">Total Mission (live)</div><div class="v" id="tms_tile_gm">—</div></div>
+              <div class="metric"><div class="k">Competition (live)</div><div class="v" id="comp_tile_gm">—</div></div>
+            </div>
+            <div class="help">GM = Min / Yours. Faster runs push score toward 1.0.</div>
+          </div>
+          <div class="col">
+            <div id="gm_graph" class="graph"></div>
+            <div class="help">Gauge and curve show how GM affects overall score given your current report scores.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary View -->
+    <section class="view" id="view-summary">
+      <div class="card panel">
+        <h2>Reports & Overall</h2>
+        <div class="grid">
+          <div class="col">
+            <label>Proposal Score (0–100)<input id="rep_prop" type="number" min="0" max="100" step="0.1" value="85"/></label>
+            <label>Design Report (0–100)<input id="rep_design" type="number" min="0" max="100" step="0.1" value="92"/></label>
+            <label>Participation (0–3)<input id="part" type="number" min="0" max="3" step="1" value="3"/></label>
+            <div class="stack" style="margin-top:6px">
+              <div class="metric"><div class="k">Total Report</div><div class="v" id="rep_total">—</div></div>
+              <div class="metric"><div class="k">Total Mission</div><div class="v" id="tms_total">—</div></div>
+              <div class="metric"><div class="k">Competition Score</div><div class="v" id="comp_total">—</div></div>
+            </div>
+          </div>
+          <div class="col">
+            <div id="stack_graph" class="graph"></div>
+            <div class="help">Bar chart shows contribution of each mission to Total Mission. Competition score = Total Report × Total Mission + Participation.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="rulesDialog">
+    <div class="modal-h">
+      <strong>DBF 2025–26 Rules</strong>
+      <button class="btn" id="closeRules">Close</button>
+    </div>
+    <div class="modal-b">
+      <iframe src="2026-DBF-Rules.pdf#toolbar=0&navpanes=0" title="Rules PDF"></iframe>
+    </div>
+  </dialog>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = (id)=>document.getElementById(id);
+    const fmt=(x,d=2)=> (isFinite(x)? Number(x).toFixed(d):'—');
+
+    // ---------- Global state (shared across views) ----------
+    const state={
+      ws_in:60,
+      // M1
+      m1_success:1,
+      // M2
+      m2:{p:6,c:2,L:5,Wh:80,maxNet:1000},
+      // M3
+      m3:{L:6,len:30,max:500},
+      // GM
+      gm:{time:75,min:60},
+      // Reports
+      rep:{prop:85, design:92, part:3}
+    };
+
+    // ---------- Rules / formulas ----------
+    function calcRAC(inches){ const ft=(inches||0)/12; return 0.05*ft + 0.75; }
+    function calcM1(success){ return success?1:0; }
+    function calcM2(p,c,L,Wh,maxNet){
+      p=Math.max(0,Math.floor(p));c=Math.max(0,Math.floor(c));L=Math.max(0,Math.floor(L));
+      const EF=(Wh||0)/100;
+      const Ip1=6, Ip2=2, Ic1=10, Ic2=8, Ce=10, Cp=0.5, Cc=2;
+      const income=p*(Ip1+Ip2*L) + c*(Ic1+Ic2*L);
+      const cost=L*(Ce + p*Cp + c*Cc)*EF;
+      const net=income - cost;
+      const score=1 + (maxNet>0? net/maxNet : 0);
+      return {EF,income,cost,net,score};
+    }
+    function calcM3(L,len,RAC,maxLLR){
+      L=Math.max(0,Math.floor(L));
+      const metric=(RAC>0? L*(len||0)/RAC : 0);
+      const score=2 + (maxLLR>0? metric/maxLLR : 0);
+      return {metric,score};
+    }
+    function calcGM(my,min){ my=Math.max(0.001,my||0); min=Math.max(0.001,min||0); return min/my; }
+    function calcReport(p,d){ return 0.15*(p||0) + 0.85*(d||0); }
+
+    // ---------- Derived values & wiring ----------
+    const ws_in=$('ws_in'); const rac_txt=$('rac_txt');
+
+    function updateAll(){
+      // Global RAC
+      const RAC=calcRAC(state.ws_in); rac_txt.textContent=fmt(RAC,2);
+
+      // M1
+      const M1=calcM1(state.m1_success); $('m1_score').textContent=fmt(M1,3);
+
+      // M2
+      const m2=calcM2(state.m2.p,state.m2.c,state.m2.L,state.m2.Wh,state.m2.maxNet);
+      $('m2_income').textContent=fmt(m2.income,2); $('m2_cost').textContent=fmt(m2.cost,2);
+      $('m2_net').textContent=fmt(m2.net,2); $('m2_ef').textContent=fmt(m2.EF,3); $('m2_score').textContent=fmt(m2.score,3);
+
+      // M3
+      const m3=calcM3(state.m3.L,state.m3.len,RAC,state.m3.max);
+      $('m3_metric').textContent=fmt(m3.metric,2); $('m3_score').textContent=fmt(m3.score,3);
+
+      // GM
+      const GM=calcGM(state.gm.time,state.gm.min); $('gm_score').textContent=fmt(GM,3);
+
+      // Totals (for live tiles)
+      const TRS=calcReport(state.rep.prop,state.rep.design);
+      const TMS=M1 + m2.score + m3.score + GM;
+      const COMP= TRS*TMS + (state.rep.part||0);
+      ['m1','m2','m3','gm'].forEach(k=>{
+        const el=document.getElementById(`tms_tile_${k}`); if(el) el.textContent=fmt(TMS,3);
+      });
+      const comp1=document.getElementById('comp_tile_m1'); if(comp1) comp1.textContent=fmt(COMP,2);
+      const compg=document.getElementById('comp_tile_gm'); if(compg) compg.textContent=fmt(COMP,2);
+
+      // Summary view
+      const rt=$('rep_total'); if(rt) rt.textContent=fmt(TRS,2);
+      const tmst=$('tms_total'); if(tmst) tmst.textContent=fmt(TMS,3);
+      const compt=$('comp_total'); if(compt) compt.textContent=fmt(COMP,2);
+
+      // Graphs
+      drawM1Graph(M1,TRS);
+      drawM2Graph();
+      drawM3Heat(RAC);
+      drawGMGraph(GM,TRS);
+      drawStack(M1,m2.score,m3.score,GM);
+    }
+
+    // ---------- Graphs ----------
+    function drawM1Graph(M1,TRS){
+      const xs=[0,1]; const comp=xs.map(v=> TRS*(v + getM2().score + getM3().score + getGM()) + state.rep.part);
+      const data=[{x:xs,y:comp,mode:'lines+markers',name:'Competition Score',line:{width:3}}];
+      const layout={margin:{l:50,r:18,t:10,b:40},xaxis:{title:'M1 Success (0/1)',dtick:1},yaxis:{title:'Competition Score'},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'};
+      Plotly.react('m1_graph',data,layout,{displayModeBar:false,responsive:true});
+    }
+    function getM2(){ return calcM2(state.m2.p,state.m2.c,state.m2.L,state.m2.Wh,state.m2.maxNet); }
+    function getM3(){ return calcM3(state.m3.L,state.m3.len,calcRAC(state.ws_in),state.m3.max); }
+    function getGM(){ return calcGM(state.gm.time,state.gm.min); }
+
+    let m2Timer=null; let m2PlayDir=1;
+    function drawM2Graph(){
+      const sweep=document.getElementById('m2_sweep').value;
+      const [lo,hi]=parseRange(document.getElementById('m2_range').value,0,12);
+      const base={p:state.m2.p,c:state.m2.c,L:state.m2.L,Wh:state.m2.Wh,maxNet:state.m2.maxNet};
+      const X=[],income=[],cost=[],net=[],score=[];
+      for(let k=lo;k<=hi;k++){
+        let p=base.p,c=base.c,L=base.L; if(sweep==='pax') p=k; else if(sweep==='cargo') c=k; else L=k;
+        const r=calcM2(p,c,L,base.Wh,base.maxNet); X.push(k); income.push(r.income); cost.push(r.cost); net.push(r.net); score.push(r.score);
+      }
+      const shapes=[{type:'rect',xref:'x',yref:'paper',x0:Math.min(...X),x1:Math.max(...X),y0:0,y1:1,fillcolor:'rgba(255,107,107,.06)',line:{width:0},layer:'below'}];
+      const layout={margin:{l:54,r:20,t:10,b:40},xaxis:{title:sweep==='pax'?'Passengers':(sweep==='cargo'?'Cargo':'Laps'),gridcolor:'rgba(255,255,255,.08)'} ,yaxis:{title:'Value ($)'},legend:{orientation:'h',y:-.2},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', shapes};
+      const data=[{x:X,y:income,name:'Income',mode:'lines+markers',line:{width:2}},{x:X,y:cost,name:'Cost',mode:'lines+markers',line:{width:2}},{x:X,y:net,name:'Net',mode:'lines+markers',line:{width:3}}];
+      Plotly.react('m2_graph',data,layout,{displayModeBar:false,responsive:true});
+    }
+    function parseRange(s,defLo,defHi){
+      try{
+        const raw=String(s||'').toLowerCase();
+        const noWS=raw.split(' ').join('').split('\t').join('').split('\n').join('');
+        const normalized=noWS.replace('to','→').replace('-','→');
+        const parts=normalized.split('→').map(Number);
+        if(parts.length===2 && parts.every(v=>isFinite(v))) return [Math.floor(parts[0]),Math.floor(parts[1])];
+      }catch(e){}
+      return [defLo,defHi];
+    }
+    function toggleM2Play(){
+      const btn=$('m2_play');
+      if(m2Timer){ clearInterval(m2Timer); m2Timer=null; btn.textContent='▶︎ Animate'; return; }
+      const ctrl=document.getElementById('m2_sweep'); const [lo,hi]=parseRange(document.getElementById('m2_range').value,0,12);
+      let k=lo; m2PlayDir=1; btn.textContent='❚❚ Pause';
+      m2Timer=setInterval(()=>{
+        if(ctrl.value==='pax') state.m2.p=k; else if(ctrl.value==='cargo') state.m2.c=k; else state.m2.L=k;
+        k+=m2PlayDir; if(k>=hi || k<=lo) m2PlayDir*=-1; updateAll();
+      }, 450);
+    }
+
+    function drawM3Heat(RAC){
+      const Lmax=Math.max(0,Math.floor(Number($('m3_lap_hi').value)||10));
+      const lenLo=Number($('m3_len_lo').value)||10; const lenHi=Number($('m3_len_hi').value)||60;
+      const xs=Array.from({length:Lmax+1},(_,i)=>i), ys=[], z=[];
+      for(let len=lenLo; len<=lenHi; len+=1){ ys.push(len); const row=[]; for(let L=0; L<=Lmax; L++){ row.push(L*len/RAC); } z.push(row); }
+      const data=[{z, x:xs, y:ys, type:'heatmap', hoverongaps:false, colorbar:{title:'L·Len / RAC'}}];
+      const layout={margin:{l:60,r:18,t:10,b:44},xaxis:{title:'Laps',dtick:1},yaxis:{title:'Banner length (in)'},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
+      Plotly.react('m3_graph',data,layout,{displayModeBar:false,responsive:true});
+    }
+
+    function drawGMGraph(GM,TRS){
+      const data=[{type:'indicator',mode:'gauge+number',value:GM,title:{text:'GM Score'},gauge:{axis:{range:[0,Math.max(1,GM)]}}}];
+      const layout={margin:{l:30,r:30,t:10,b:10},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
+      Plotly.react('gm_graph',data,layout,{displayModeBar:false,responsive:true});
+    }
+
+    function drawStack(M1,M2,M3,GM){
+      const data=[{x:['M1','M2','M3','GM'], y:[M1,M2,M3,GM], type:'bar', text:[M1,M2,M3,GM].map(v=>fmt(v,3)), textposition:'auto'}];
+      const layout={margin:{l:52,r:18,t:10,b:40},yaxis:{title:'Score'},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)'};
+      Plotly.react('stack_graph',data,layout,{displayModeBar:false,responsive:true});
+    }
+
+    // ---------- Nav logic ----------
+    function show(view){
+      document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+      document.querySelectorAll('.view').forEach(v=> v.style.display = (v.id===`view-${view}`?'block':'none'));
+      // re-render current view graph just in case size changed
+      updateAll();
+      localStorage.setItem('dbf_last_view',view);
+    }
+
+    document.getElementById('nav').addEventListener('click', (e)=>{
+      if(e.target.tagName==='BUTTON'){ show(e.target.dataset.view); }
+    });
+
+    // Keyboard: ←/→ to change sections
+    window.addEventListener('keydown', (e)=>{
+      if(['ArrowLeft','ArrowRight'].includes(e.key)){
+        const cur=document.querySelector('.seg button.active');
+        const arr=[...document.querySelectorAll('.seg button')];
+        let i=arr.indexOf(cur); i += (e.key==='ArrowRight'? 1 : -1); if(i<0) i=arr.length-1; if(i>=arr.length) i=0; show(arr[i].dataset.view);
+      }
+    });
+
+    // ---------- Inputs wiring ----------
+    ws_in.addEventListener('input', ()=>{ state.ws_in=Number(ws_in.value)||0; updateAll(); });
+
+    $('m1_success').addEventListener('input', (e)=>{ state.m1_success=Number(e.target.value)||0; updateAll(); });
+
+    ['m2_pax','m2_cargo','m2_laps','m2_wh','m2_maxnet'].forEach(id=>{
+      $(id).addEventListener('input', ()=>{
+        state.m2.p=Number($('m2_pax').value)||0; state.m2.c=Number($('m2_cargo').value)||0; state.m2.L=Number($('m2_laps').value)||0; state.m2.Wh=Number($('m2_wh').value)||0; state.m2.maxNet=Number($('m2_maxnet').value)||1; updateAll();
+      });
+    });
+    $('m2_sweep').addEventListener('input', ()=> drawM2Graph());
+    $('m2_range').addEventListener('input', ()=> drawM2Graph());
+    $('m2_play').addEventListener('click', toggleM2Play);
+
+    ['m3_laps','m3_len','m3_max'].forEach(id=>{
+      $(id).addEventListener('input', ()=>{ state.m3.L=Number($('m3_laps').value)||0; state.m3.len=Number($('m3_len').value)||0; state.m3.max=Number($('m3_max').value)||1; updateAll(); });
+    });
+    ['m3_lap_hi','m3_len_lo','m3_len_hi'].forEach(id=> $(id).addEventListener('input', ()=> drawM3Heat(calcRAC(state.ws_in))));
+
+    ['gm_time','gm_min'].forEach(id=> $(id).addEventListener('input', ()=>{ state.gm.time=Number($('gm_time').value)||0; state.gm.min=Number($('gm_min').value)||0; updateAll(); }));
+
+    ['rep_prop','rep_design','part'].forEach(id=> $(id).addEventListener('input', ()=>{ state.rep.prop=Number($('rep_prop').value)||0; state.rep.design=Number($('rep_design').value)||0; state.rep.part=Number($('part').value)||0; updateAll(); }));
+
+    // ---------- Rules modal ----------
+    const rulesDialog=$('rulesDialog');
+    $('openRules').addEventListener('click', ()=> rulesDialog.showModal());
+    $('closeRules').addEventListener('click', ()=> rulesDialog.close());
+
+    // ---------- Init ----------
+    function initFromInputs(){
+      state.ws_in=Number(ws_in.value)||60;
+      state.m1_success=Number($('m1_success').value)||1;
+      state.m2={p:Number($('m2_pax').value)||6, c:Number($('m2_cargo').value)||2, L:Number($('m2_laps').value)||5, Wh:Number($('m2_wh').value)||80, maxNet:Number($('m2_maxnet').value)||1000};
+      state.m3={L:Number($('m3_laps').value)||6, len:Number($('m3_len').value)||30, max:Number($('m3_max').value)||500};
+      state.gm={time:Number($('gm_time').value)||75, min:Number($('gm_min').value)||60};
+      state.rep={prop:Number($('rep_prop').value)||85, design:Number($('rep_design').value)||92, part:Number($('part').value)||3};
+    }
+
+    initFromInputs();
+    updateAll();
+    show(localStorage.getItem('dbf_last_view')||'m2');
+  </script>
+</body>
+</html>
