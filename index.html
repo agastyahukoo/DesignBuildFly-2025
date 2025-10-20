@@ -555,16 +555,19 @@
       Plotly.react('m2_graph',data,layout,{displayModeBar:false,responsive:true});
     }
 
-    function parseRange(s,defLo,defHi){
-      try{
-        const raw=String(s||'').toLowerCase();
-        const normalized=raw.split(' ').join('').split('	').join('').split('
-').join('').replace('to','→').replace('-','→');
-        const parts=normalized.split('→').map(Number);
-        if(parts.length===2 && parts.every(v=>isFinite(v))) return [Math.floor(parts[0]),Math.floor(parts[1])];
-      }catch(e){}
-      return [defLo,defHi];
+  function parseRange(s, defLo, defHi){
+    try{
+    const raw = String(s || '').toLowerCase();
+    // Remove all whitespace (spaces, tabs, newlines) and normalize separators to →
+    const normalized = raw.replace(/\s+/g, '').replace(/to|-|→/g, '→');
+    const parts = normalized.split('→').map(Number);
+    if (parts.length === 2 && parts.every(Number.isFinite)) {
+      return [Math.floor(parts[0]), Math.floor(parts[1])];
     }
+  } catch (e) {}
+  return [defLo, defHi];
+  }
+
 
     // Existing M3 heatmap
     function drawM3Heat(RAC){
