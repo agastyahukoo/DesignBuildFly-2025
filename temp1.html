@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBF Scoring Grapher</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8f9fc;
+    --card: #ffffff;
+    --border: #e8ecf3;
+    --text: #0e1320;
+    --muted: #5a6473;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --shadow: rgba(0,0,0,0.05);
+    --graph-bg: #ffffff;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --card: #242938;
+      --border: #2d3548;
+      --text: #e8ecf3;
+      --muted: #8b92a7;
+      --accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --success: #34d399;
+      --shadow: rgba(0,0,0,0.3);
+      --graph-bg: #1a1f2e;
+    }
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  
+  .container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 420px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+  
+  .header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  
+  .header p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  
+  /* Navigation Tabs */
+  .nav-tabs {
+    display: flex;
+    padding: 12px 16px 0;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  
+  .tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .tab:hover {
+    background: var(--card);
+    color: var(--text);
+  }
+  
+  .tab.active {
+    background: var(--bg);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  
+  /* Content Area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px var(--shadow);
+    transition: all 0.3s ease;
+  }
+  
+  .section:hover {
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+  
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    transition: all 0.2s ease;
+  }
+  
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  
+  .metric-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  
+  /* Buttons */
+  .btn {
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  }
+  
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  /* Checkbox */
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  
+  .checkbox input {
+    width: auto;
+    cursor: pointer;
+  }
+  
+  .checkbox span {
+    font-size: 13px;
+    color: var(--text);
+  }
+  
+  /* Main Content */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  
+  .graph-container {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+  }
+  
+  .graph-wrapper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .graph-wrapper:hover {
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+  
+  .graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .graph-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .fullscreen-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .fullscreen-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  
+  .graph {
+    height: 400px;
+    width: 100%;
+  }
+  
+  /* Fullscreen Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    padding: 40px;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  .modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    width: 95%;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .modal-title {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  
+  .close-btn {
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .modal-graph {
+    flex: 1;
+  }
+  
+  /* Report */
+  .report-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+  
+  .report-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  
+  .report-subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+  
+  .report-section {
+    margin-bottom: 32px;
+  }
+  
+  .report-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  
+  .report-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .report-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+  
+  .report-label {
+    color: var(--muted);
+  }
+  
+  .report-value {
+    font-weight: 600;
+  }
+  
+  .report-total {
+    background: var(--accent);
+    color: white;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 24px;
+  }
+  
+  .report-total .label {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .report-total .value {
+    font-size: 48px;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+  
+  @media print {
+    .sidebar, .nav-tabs, .btn { display: none; }
+    .main-content { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="header">
+      <h1>DBF Scoring Grapher</h1>
+      <p>Design Build Fly Competition Analyzer</p>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="m2">M2</button>
+      <button class="tab" data-tab="m3">M3</button>
+      <button class="tab" data-tab="report">Report</button>
+    </div>
+    
+    <div class="content">
+      <!-- Overview Tab -->
+      <div class="tab-content active" data-content="overview">
+        <div class="section">
+          <div class="section-title">Aircraft Parameters</div>
+          <div class="form-group">
+            <label>Wingspan (inches, 0–60)</label>
+            <input id="ws" type="number" step="1" min="0" max="60" value="60">
+          </div>
+          <div class="metrics">
+            <div class="metric-card">
+              <div class="metric-label">Wingspan</div>
+              <div class="metric-value" id="ws_v">60</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">RAC</div>
+              <div class="metric-value" id="rac_v">1.00</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Reports & Participation</div>
+          <div class="form-group">
+            <label>Proposal Score (0–100)</label>
+            <input id="prop" type="number" step="0.1" min="0" max="100" value="85">
+          </div>
+          <div class="form-group">
+            <label>Design Report Score (0–100)</label>
+            <input id="design" type="number" step="0.1" min="0" max="100" value="92">
+          </div>
+          <div class="form-group">
+            <label>Participation Score (0–3)</label>
+            <input id="part" type="number" step="1" min="0" max="3" value="3">
+          </div>
+          <div class="metrics">
+            <div class="metric-card" style="grid-column: span 2;">
+              <div class="metric-label">Total Report Score</div>
+              <div class="metric-value" id="rep_v">90.05</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Mission 1 & Ground Mission</div>
+          <div class="form-group">
+            <label>M1 Successful?</label>
+            <select id="m1s">
+              <option value="1" selected>Yes</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Your GM Time (s)</label>
+              <input id="gm_time" type="number" step="0.01" min="0.01" value="75">
+            </div>
+            <div class="form-group">
+              <label>Fastest GM Time (s)</label>
+              <input id="gm_min" type="number" step="0.01" min="0.01" value="60">
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric-card">
+              <div class="metric-label">M1 Score</div>
+              <div class="metric-value" id="m1_v">1.000</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">GM Score</div>
+              <div class="metric-value" id="gm_v">0.800</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Overall Scores</div>
+          <div class="metrics">
+            <div class="metric-card">
+              <div class="metric-label">Total Mission</div>
+              <div class="metric-value" id="tms_v">4.800</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Competition</div>
+              <div class="metric-value" id="comp_v">435.24</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button id="reset_all" class="btn">Reset All</button>
+          <button id="open_pdf" class="btn">Open Rules PDF</button>
+        </div>
+      </div>
+      
+      <!-- M2 Tab -->
+      <div class="tab-content" data-content="m2">
+        <div class="section">
+          <div class="section-title">M2 Configuration</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Passengers</label>
+              <input id="m2_p" type="number" step="1" min="0" value="6">
+            </div>
+            <div class="form-group">
+              <label>Cargo Pucks</label>
+              <input id="m2_c" type="number" step="1" min="0" value="2">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Laps</label>
+              <input id="m2_L" type="number" step="1" min="0" value="5">
+            </div>
+            <div class="form-group">
+              <label>Propulsion (Wh, ≤100)</label>
+              <input id="m2_Wh" type="number" step="0.1" min="0" max="100" value="80">
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric-card">
+              <div class="metric-label">Income</div>
+              <div class="metric-value" id="m2_income">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Cost</div>
+              <div class="metric-value" id="m2_cost">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Net Income</div>
+              <div class="metric-value" id="m2_net">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">M2 Score</div>
+              <div class="metric-value" id="m2_score">—</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Normalization & Limits</div>
+          <div class="form-group">
+            <label>Max Net Income in Field</label>
+            <input id="m2_MaxNet" type="number" step="0.01" min="0.01" value="1000">
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Min Passengers</label>
+              <input id="m2_minP" type="number" step="1" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label>Max Passengers</label>
+              <input id="m2_maxP" type="number" step="1" min="0" value="50">
+            </div>
+            <div class="form-group">
+              <label>Min Cargo</label>
+              <input id="m2_minC" type="number" step="1" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label>Max Cargo</label>
+              <input id="m2_maxC" type="number" step="1" min="0" value="30">
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Curve Analysis</div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>X-Axis Variable</label>
+              <select id="m2_curveX">
+                <option value="L">Laps</option>
+                <option value="p">Passengers</option>
+                <option value="c">Cargo</option>
+                <option value="Wh">Wh</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Range Start</label>
+              <input id="m2_curveLo" type="number" step="1" value="0">
+            </div>
+            <div class="form-group">
+              <label>Range End</label>
+              <input id="m2_curveHi" type="number" step="1" value="12">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Step Size</label>
+            <input id="m2_curveStep" type="number" step="0.1" value="1">
+          </div>
+          <div class="checkbox-group">
+            <label class="checkbox"><input id="m2_showIncome" type="checkbox" checked><span>Income</span></label>
+            <label class="checkbox"><input id="m2_showCost" type="checkbox" checked><span>Cost</span></label>
+            <label class="checkbox"><input id="m2_showNet" type="checkbox" checked><span>Net</span></label>
+            <label class="checkbox"><input id="m2_showScore" type="checkbox" checked><span>Score</span></label>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Sensitivity Analysis</div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>± Span (%)</label>
+              <input id="m2_sensSpan" type="number" step="1" value="50">
+            </div>
+            <div class="form-group">
+              <label>Steps</label>
+              <input id="m2_sensSteps" type="number" step="1" value="41">
+            </div>
+            <div class="form-group">
+              <label>Hold Others Constant</label>
+              <select id="m2_sensHold">
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label class="checkbox"><input id="m2_sensP" type="checkbox" checked><span>Passengers</span></label>
+            <label class="checkbox"><input id="m2_sensC" type="checkbox" checked><span>Cargo</span></label>
+            <label class="checkbox"><input id="m2_sensL" type="checkbox" checked><span>Laps</span></label>
+            <label class="checkbox"><input id="m2_sensWh" type="checkbox" checked><span>Wh</span></label>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button id="m2_reset" class="btn btn-primary">Reset M2</button>
+        </div>
+      </div>
+      
+      <!-- M3 Tab -->
+      <div class="tab-content" data-content="m3">
+        <div class="section">
+          <div class="section-title">M3 Configuration</div>
+          <div class="form-group">
+            <label>Laps</label>
+            <input id="m3_L" type="number" step="1" min="0" value="6">
+          </div>
+          <div class="form-group">
+            <label>Banner Length (inches, quantized to ¼")</label>
+            <input id="m3_len" type="number" step="0.25" min="10" value="30">
+          </div>
+          <div class="form-group">
+            <label>Field Max of (L·Len/RAC)</label>
+            <input id="m3_max" type="number" step="0.01" min="0.01" value="500">
+          </div>
+          <div class="metrics">
+            <div class="metric-card">
+              <div class="metric-label">Metric (L·Len/RAC)</div>
+              <div class="metric-value" id="m3_metric">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">M3 Score</div>
+              <div class="metric-value" id="m3_score">—</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Curve Analysis</div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>X-Axis Variable</label>
+              <select id="m3_curveX">
+                <option value="L">Laps</option>
+                <option value="Len">Banner Length</option>
+                <option value="WS">Wingspan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Range Start</label>
+              <input id="m3_curveLo" type="number" step="1" value="0">
+            </div>
+            <div class="form-group">
+              <label>Range End</label>
+              <input id="m3_curveHi" type="number" step="1" value="12">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Step Size</label>
+            <input id="m3_curveStep" type="number" step="0.25" value="1">
+          </div>
+          <div class="checkbox-group">
+            <label class="checkbox"><input id="m3_showMetric" type="checkbox" checked><span>Metric</span></label>
+            <label class="checkbox"><input id="m3_showScore" type="checkbox" checked><span>Score</span></label>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Sensitivity Analysis</div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>± Span (%)</label>
+              <input id="m3_sensSpan" type="number" step="1" value="50">
+            </div>
+            <div class="form-group">
+              <label>Steps</label>
+              <input id="m3_sensSteps" type="number" step="1" value="41">
+            </div>
+            <div class="form-group">
+              <label>Hold Others Constant</label>
+              <select id="m3_sensHold">
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label class="checkbox"><input id="m3_sensL" type="checkbox" checked><span>Laps</span></label>
+            <label class="checkbox"><input id="m3_sensLen" type="checkbox" checked><span>Length</span></label>
+            <label class="checkbox"><input id="m3_sensWS" type="checkbox" checked><span>Wingspan</span></label>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button id="m3_reset" class="btn btn-primary">Reset M3</button>
+        </div>
+      </div>
+      
+      <!-- Report Tab -->
+      <div class="tab-content" data-content="report">
+        <div class="report-container">
+          <h2 class="report-title">Competition Score Report</h2>
+          <p class="report-subtitle">Design Build Fly Analysis</p>
+          
+          <div class="report-section">
+            <h3>Aircraft Configuration</h3>
+            <div class="report-item">
+              <span class="report-label">Wingspan</span>
+              <span class="report-value" id="r_ws">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">RAC Factor</span>
+              <span class="report-value" id="r_rac">—</span>
+            </div>
+          </div>
+          
+          <div class="report-section">
+            <h3>Reports & Participation</h3>
+            <div class="report-item">
+              <span class="report-label">Proposal Score</span>
+              <span class="report-value" id="r_prop">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">Design Report Score</span>
+              <span class="report-value" id="r_design">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">Participation Score</span>
+              <span class="report-value" id="r_part">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label"><strong>Total Report Score</strong></span>
+              <span class="report-value" id="r_tr">—</span>
+            </div>
+          </div>
+          
+          <div class="report-section">
+            <h3>Mission Scores</h3>
+            <div class="report-item">
+              <span class="report-label">Mission 1 (M1)</span>
+              <span class="report-value" id="r_m1">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">Mission 2 (M2)</span>
+              <span class="report-value" id="r_m2">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">Mission 3 (M3)</span>
+              <span class="report-value" id="r_m3">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label">Ground Mission (GM)</span>
+              <span class="report-value" id="r_gm">—</span>
+            </div>
+            <div class="report-item">
+              <span class="report-label"><strong>Total Mission Score</strong></span>
+              <span class="report-value" id="r_tms">—</span>
+            </div>
+          </div>
+          
+          <div class="report-total">
+            <div class="label">Final Competition Score</div>
+            <div class="value" id="r_comp">—</div>
+          </div>
+          
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <div class="graph-container">
+      <div class="graph-wrapper">
+        <div class="graph-header">
+          <h3 class="graph-title" id="graph1_title">M2 Curve Analysis</h3>
+          <button class="fullscreen-btn" onclick="openFullscreen('graph1')">⛶ Fullscreen</button>
+        </div>
+        <div id="graph1" class="graph"></div>
+      </div>
+      
+      <div class="graph-wrapper">
+        <div class="graph-header">
+          <h3 class="graph-title" id="graph2_title">M2 Sensitivity Analysis</h3>
+          <button class="fullscreen-btn" onclick="openFullscreen('graph2')">⛶ Fullscreen</button>
+        </div>
+        <div id="graph2" class="graph"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fullscreen Modal -->
+<div class="modal" id="fullscreenModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal_title">Graph</h3>
+      <button class="close-btn" onclick="closeFullscreen()">✕ Close</button>
+    </div>
+    <div id="modalGraph" class="modal-graph"></div>
+  </div>
+</div>
+
+<script>
+  // Core calculation functions (unchanged logic)
+  const clamp=(x,a,b)=>Math.min(Math.max(Number(x)||0,a),b)
+  const fmt=(x,d=2)=>isFinite(x)?Number(x).toFixed(d):"—"
+  const qQuarter=x=>Math.floor((Number(x)||0)*4)/4
+  const roundInch=x=>Math.round(Number(x)||0)
+  
+  function calcRAC(inches){
+    const s=clamp(roundInch(inches),0,60);
+    const ft=s/12;
+    return {ws:s,rac:Math.max(0.90,0.05*ft+0.75)}
+  }
+  
+  function calcM1(s){return Number(s)?1:0}
+  
+  function calcM2(p,c,L,Wh,MaxNet,limits){
+    const minP=Math.max(0,Math.floor(Number(limits.minP)||0));
+    const maxP=Math.max(minP,Math.floor(Number(limits.maxP)||0));
+    const minC=Math.max(0,Math.floor(Number(limits.minC)||0));
+    const maxC=Math.max(minC,Math.floor(Number(limits.maxC)||0));
+    p=clamp(Math.round(p),minP,maxP);
+    c=clamp(Math.round(c),minC,maxC);
+    L=Math.max(0,Math.round(Number(L)||0));
+    const WhC=clamp(Wh,0,100);
+    const EF=WhC/100;
+    const Ip1=6,Ip2=2,Ic1=10,Ic2=8,Ce=10,Cp=0.5,Cc=2;
+    const income=p*(Ip1+Ip2*L)+c*(Ic1+Ic2*L);
+    const cost=L*(Ce+p*Cp+c*Cc)*EF;
+    const net=income-cost;
+    const score=1+((Number(MaxNet)>0)?net/Number(MaxNet):0);
+    return {p,c,L,Wh:WhC,EF,income,cost,net,score}
+  }
+  
+  function calcM3(L,lenIn,RAC,maxLLR){
+    L=Math.max(0,Math.round(Number(L)||0));
+    const len=qQuarter(lenIn);
+    const metric=(RAC>0)?L*len/RAC:0;
+    const score=2+((Number(maxLLR)>0)?metric/Number(maxLLR):0);
+    return {L,lenQ:len,metric,score}
+  }
+  
+  function calcGM(my,min){
+    const a=Math.max(0.001,Number(my)||0.001),b=Math.max(0.001,Number(min)||0.001);
+    return b/a
+  }
+  
+  function calcReport(p,d){
+    return 0.15*(Number(p)||0)+0.85*(Number(d)||0)
+  }
+  
+  function totals(){
+    const rR=calcRAC(document.getElementById("ws").value);
+    const M1=calcM1(document.getElementById("m1s").value);
+    const m2=calcM2(
+      document.getElementById("m2_p").value,
+      document.getElementById("m2_c").value,
+      document.getElementById("m2_L").value,
+      document.getElementById("m2_Wh").value,
+      document.getElementById("m2_MaxNet").value,
+      {
+        minP:document.getElementById("m2_minP").value,
+        maxP:document.getElementById("m2_maxP").value,
+        minC:document.getElementById("m2_minC").value,
+        maxC:document.getElementById("m2_maxC").value
+      }
+    );
+    const m3=calcM3(
+      document.getElementById("m3_L").value,
+      document.getElementById("m3_len").value,
+      rR.rac,
+      document.getElementById("m3_max").value
+    );
+    const GM=calcGM(
+      document.getElementById("gm_time").value,
+      document.getElementById("gm_min").value
+    );
+    const TR=calcReport(
+      document.getElementById("prop").value,
+      document.getElementById("design").value
+    );
+    const PART=clamp(document.getElementById("part").value,0,3);
+    const TMS=M1+m2.score+m3.score+GM;
+    const COMP=TR*TMS+PART;
+    return {rR,M1,m2,m3,GM,TR,PART,TMS,COMP}
+  }
+  
+  // UI Functions
+  function updateMetrics(){
+    const t=totals();
+    document.getElementById("ws_v").textContent=t.rR.ws;
+    document.getElementById("rac_v").textContent=fmt(t.rR.rac,2);
+    document.getElementById("m1_v").textContent=fmt(t.M1,3);
+    document.getElementById("gm_v").textContent=fmt(t.GM,3);
+    document.getElementById("rep_v").textContent=fmt(t.TR,2);
+    document.getElementById("tms_v").textContent=fmt(t.TMS,3);
+    document.getElementById("comp_v").textContent=fmt(t.COMP,2);
+    document.getElementById("m2_income").textContent=fmt(t.m2.income,2);
+    document.getElementById("m2_cost").textContent=fmt(t.m2.cost,2);
+    document.getElementById("m2_net").textContent=fmt(t.m2.net,2);
+    document.getElementById("m2_score").textContent=fmt(t.m2.score,3);
+    document.getElementById("m3_metric").textContent=fmt(t.m3.metric,2);
+    document.getElementById("m3_score").textContent=fmt(t.m3.score,3);
+    
+    // Update report
+    document.getElementById("r_ws").textContent=t.rR.ws+" in";
+    document.getElementById("r_rac").textContent=fmt(t.rR.rac,2);
+    document.getElementById("r_prop").textContent=fmt(Number(document.getElementById("prop").value),1);
+    document.getElementById("r_design").textContent=fmt(Number(document.getElementById("design").value),1);
+    document.getElementById("r_part").textContent=document.getElementById("part").value;
+    document.getElementById("r_tr").textContent=fmt(t.TR,2);
+    document.getElementById("r_m1").textContent=fmt(t.M1,3);
+    document.getElementById("r_m2").textContent=fmt(t.m2.score,3);
+    document.getElementById("r_m3").textContent=fmt(t.m3.score,3);
+    document.getElementById("r_gm").textContent=fmt(t.GM,3);
+    document.getElementById("r_tms").textContent=fmt(t.TMS,3);
+    document.getElementById("r_comp").textContent=fmt(t.COMP,2);
+  }
+  
+  function getGraphLayout(title){
+    return {
+      margin:{l:58,r:18,t:10,b:48},
+      paper_bgcolor:getComputedStyle(document.documentElement).getPropertyValue('--graph-bg').trim(),
+      plot_bgcolor:getComputedStyle(document.documentElement).getPropertyValue('--graph-bg').trim(),
+      font:{color:getComputedStyle(document.documentElement).getPropertyValue('--text').trim()},
+      xaxis:{
+        title:title,
+        gridcolor:getComputedStyle(document.documentElement).getPropertyValue('--border').trim(),
+        color:getComputedStyle(document.documentElement).getPropertyValue('--text').trim()
+      },
+      yaxis:{
+        title:"Value",
+        gridcolor:getComputedStyle(document.documentElement).getPropertyValue('--border').trim(),
+        color:getComputedStyle(document.documentElement).getPropertyValue('--text').trim()
+      },
+      legend:{orientation:"h"}
+    }
+  }
+  
+  function drawM2Curves(){
+    const base=totals().m2;
+    let lo=Number(document.getElementById("m2_curveLo").value);
+    let hi=Number(document.getElementById("m2_curveHi").value);
+    let step=Math.abs(Number(document.getElementById("m2_curveStep").value)||1);
+    if(step===0)step=1;
+    if(hi<lo){const z=lo;lo=hi;hi=z}
+    const xSel=document.getElementById("m2_curveX").value;
+    const xs=[],yi=[],yc=[],yn=[],ys=[];
+    const lim={
+      minP:document.getElementById("m2_minP").value,
+      maxP:document.getElementById("m2_maxP").value,
+      minC:document.getElementById("m2_minC").value,
+      maxC:document.getElementById("m2_maxC").value
+    };
+    for(let x=lo;x<=hi+1e-12;x+=step){
+      let p=base.p,c=base.c,L=base.L,Wh=base.Wh;
+      if(xSel==="p")p=Math.round(x);
+      if(xSel==="c")c=Math.round(x);
+      if(xSel==="L")L=Math.round(x);
+      if(xSel==="Wh")Wh=Number(x);
+      const r=calcM2(p,c,L,Wh,document.getElementById("m2_MaxNet").value,lim);
+      xs.push(xSel==="Wh"?Number(x):Math.round(x));
+      yi.push(r.income);
+      yc.push(r.cost);
+      yn.push(r.net);
+      ys.push(r.score);
+    }
+    const traces=[];
+    if(document.getElementById("m2_showIncome").checked)traces.push({x:xs,y:yi,name:"Income",mode:"lines",line:{width:3}});
+    if(document.getElementById("m2_showCost").checked)traces.push({x:xs,y:yc,name:"Cost",mode:"lines",line:{width:3}});
+    if(document.getElementById("m2_showNet").checked)traces.push({x:xs,y:yn,name:"Net",mode:"lines",line:{width:3}});
+    if(document.getElementById("m2_showScore").checked)traces.push({x:xs,y:ys,name:"Score",mode:"lines",line:{width:3}});
+    const xlabel={p:"Passengers",c:"Cargo",L:"Laps",Wh:"Wh"}[xSel];
+    Plotly.react("graph1",traces,getGraphLayout(xlabel),{displayModeBar:false,responsive:true});
+  }
+  
+  function drawM2Sensitivity(){
+    const base=totals().m2;
+    const baseScore=base.score;
+    const span=Math.max(1,Math.abs(Number(document.getElementById("m2_sensSpan").value)||50));
+    const steps=Math.max(5,Math.floor(Number(document.getElementById("m2_sensSteps").value)||41));
+    const lim={
+      minP:document.getElementById("m2_minP").value,
+      maxP:document.getElementById("m2_maxP").value,
+      minC:document.getElementById("m2_minC").value,
+      maxC:document.getElementById("m2_maxC").value
+    };
+    const hold=document.getElementById("m2_sensHold").value==="1";
+    const sel={
+      p:document.getElementById("m2_sensP").checked,
+      c:document.getElementById("m2_sensC").checked,
+      L:document.getElementById("m2_sensL").checked,
+      Wh:document.getElementById("m2_sensWh").checked
+    };
+    const traces=[];
+    const add=(key,label,disc)=>{
+      const X=[],Y=[];
+      for(let i=0;i<steps;i++){
+        const pct=-span+(2*span)*i/(steps-1);
+        let p=base.p,c=base.c,L=base.L,Wh=base.Wh;
+        if(key==="p")p=disc?clamp(Math.round(base.p*(1+pct/100)),Number(lim.minP),Number(lim.maxP)):base.p;
+        if(key==="c")c=disc?clamp(Math.round(base.c*(1+pct/100)),Number(lim.minC),Number(lim.maxC)):base.c;
+        if(key==="L")L=disc?Math.max(0,Math.round(base.L*(1+pct/100))):base.L;
+        if(key==="Wh")Wh=base.Wh*(1+pct/100);
+        if(!hold){
+          if(key!=="p")p=disc?clamp(Math.round(base.p*(1+pct/100)),Number(lim.minP),Number(lim.maxP)):p;
+          if(key!=="c")c=disc?clamp(Math.round(base.c*(1+pct/100)),Number(lim.minC),Number(lim.maxC)):c;
+          if(key!=="L")L=disc?Math.max(0,Math.round(base.L*(1+pct/100))):L;
+          if(key!=="Wh")Wh=base.Wh*(1+pct/100);
+        }
+        const r=calcM2(p,c,L,Wh,document.getElementById("m2_MaxNet").value,lim);
+        const dy=baseScore===0?0:100*(r.score-baseScore)/Math.abs(baseScore);
+        X.push(pct);
+        Y.push(dy);
+      }
+      traces.push({x:X,y:Y,name:label,mode:"lines",line:{width:3}});
+    };
+    if(sel.p)add("p","Passengers",true);
+    if(sel.c)add("c","Cargo",true);
+    if(sel.L)add("L","Laps",true);
+    if(sel.Wh)add("Wh","Wh",false);
+    Plotly.react("graph2",traces,getGraphLayout("% change in parameter"),{displayModeBar:false,responsive:true});
