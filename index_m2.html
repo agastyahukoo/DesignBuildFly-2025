@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M2 Scoring Grapher</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root{--ink:#0e1320;--muted:#5a6473;--line:#e8ecf3;--accent:#0b6dff}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 Inter,system-ui,Arial;background:#ffffff;color:var(--ink)}
+  header{padding:14px 18px;border-bottom:1px solid #eef2f7}
+  h1{margin:0;font-size:18px}
+  main{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:16px}
+  .card{border:1px solid #eef2f7;border-radius:14px;padding:16px}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:980px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+  input,select{width:100%;padding:10px 12px;border:1px solid #d9e1ec;border-radius:10px;font-size:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .chk{display:flex;gap:8px;align-items:center}
+  .metric{border:1px solid #eef2f7;border-radius:10px;padding:10px 12px}
+  .metric .k{font-size:12px;color:var(--muted)}
+  .metric .v{font-size:20px;font-weight:700}
+  .graph{height:440px}
+  .title{font-size:14px;font-weight:700;margin:0 0 8px}
+  .pill{font-size:12px;border:1px solid #d9e1ec;border-radius:999px;padding:4px 8px}
+  .btn{appearance:none;border:1px solid #d9e1ec;background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <h1>M2 Scoring Grapher — Inputs → Curves and Sensitivity</h1>
+</header>
+<main>
+  <section class="card grid g3">
+    <div>
+      <div class="title">Baseline Inputs</div>
+      <label>Passengers (p)
+        <input id="p" type="number" step="1" min="0" value="6">
+      </label>
+      <label>Cargo pucks (c)
+        <input id="c" type="number" step="1" min="0" value="2">
+      </label>
+      <label>Laps (L)
+        <input id="L" type="number" step="1" min="0" value="5">
+      </label>
+      <label>Total Propulsion Capacity (Wh)
+        <input id="Wh" type="number" step="0.1" min="1" value="80">
+      </label>
+    </div>
+    <div>
+      <div class="title">Normalization & Limits</div>
+      <label>Max Net Income in field
+        <input id="MaxNet" type="number" step="0.01" min="0.01" value="1000">
+      </label>
+      <div class="grid g2">
+        <label>Min Passengers
+          <input id="minP" type="number" step="1" min="0" value="0">
+        </label>
+        <label>Max Passengers
+          <input id="maxP" type="number" step="1" min="0" value="50">
+        </label>
+        <label>Min Cargo
+          <input id="minC" type="number" step="1" min="0" value="0">
+        </label>
+        <label>Max Cargo
+          <input id="maxC" type="number" step="1" min="0" value="30">
+        </label>
+      </div>
+      <div class="row">
+        <button id="reset" class="btn">Reset</button>
+        <span class="pill">EF = Wh/100</span>
+      </div>
+    </div>
+    <div>
+      <div class="title">Baseline Metrics</div>
+      <div class="grid g2">
+        <div class="metric"><div class="k">Income</div><div class="v" id="mIncome">—</div></div>
+        <div class="metric"><div class="k">Cost</div><div class="v" id="mCost">—</div></div>
+        <div class="metric"><div class="k">Net</div><div class="v" id="mNet">—</div></div>
+        <div class="metric"><div class="k">M2 Score</div><div class="v" id="mScore">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card grid g2">
+    <div>
+      <div class="title">Curves</div>
+      <div class="grid g3">
+        <label>X-Axis
+          <select id="curveX">
+            <option value="L">Laps</option>
+            <option value="p">Passengers</option>
+            <option value="c">Cargo</option>
+            <option value="Wh">Wh</option>
+          </select>
+        </label>
+        <label>Range start
+          <input id="curveLo" type="number" step="1" value="0">
+        </label>
+        <label>Range end
+          <input id="curveHi" type="number" step="1" value="12">
+        </label>
+      </div>
+      <div class="grid g4" style="margin-top:6px">
+        <label>Step
+          <input id="curveStep" type="number" step="0.1" value="1">
+        </label>
+        <div class="chk"><input id="showIncome" type="checkbox" checked><span>Income</span></div>
+        <div class="chk"><input id="showCost" type="checkbox" checked><span>Cost</span></div>
+        <div class="chk"><input id="showNet" type="checkbox" checked><span>Net</span></div>
+        <div class="chk"><input id="showScore" type="checkbox" checked><span>Score</span></div>
+      </div>
+    </div>
+    <div><div id="curvePlot" class="graph"></div></div>
+  </section>
+
+  <section class="card grid g2">
+    <div>
+      <div class="title">Sensitivity: % change in Score vs % change in Input</div>
+      <div class="grid g3">
+        <label>± Span (%)
+          <input id="sensSpan" type="number" step="1" value="50">
+        </label>
+        <label>Steps
+          <input id="sensSteps" type="number" step="1" value="41">
+        </label>
+        <label>Hold others constant
+          <select id="sensHold">
+            <option value="1">Yes</option>
+            <option value="0">No (vary one at a time anyway)</option>
+          </select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="chk"><input id="sensP" type="checkbox" checked><span>Passengers</span></div>
+        <div class="chk"><input id="sensC" type="checkbox" checked><span>Cargo</span></div>
+        <div class="chk"><input id="sensL" type="checkbox" checked><span>Laps</span></div>
+        <div class="chk"><input id="sensWh" type="checkbox" checked><span>Wh</span></div>
+      </div>
+    </div>
+    <div><div id="sensPlot" class="graph"></div></div>
+  </section>
+</main>
+
+<script>
+  const $=id=>document.getElementById(id)
+  const clamp=(x,a,b)=>Math.min(Math.max(x,a),b)
+  const roundInt=x=>Math.round(Number(x)||0)
+  const fmt=(x,d=2)=>isFinite(x)?Number(x).toFixed(d):"—"
+
+  function calcM2(p,c,L,Wh,MaxNet,limits){
+    const minP=roundInt(limits.minP), maxP=roundInt(limits.maxP), minC=roundInt(limits.minC), maxC=roundInt(limits.maxC)
+    p=clamp(roundInt(p),minP,maxP)
+    c=clamp(roundInt(c),minC,maxC)
+    L=roundInt(Math.max(0,L))
+    const EF=(Number(Wh)||0)/100
+    const Ip1=6, Ip2=2, Ic1=10, Ic2=8, Ce=10, Cp=0.5, Cc=2
+    const income=p*(Ip1+Ip2*L)+c*(Ic1+Ic2*L)
+    const cost=L*(Ce+p*Cp+c*Cc)*EF
+    const net=income-cost
+    const score=1+((Number(MaxNet)>0)?net/Number(MaxNet):0)
+    return {p,c,L,Wh:Number(Wh)||0,EF,income,cost,net,score}
+  }
+
+  function baseline(){
+    return calcM2(Number($("p").value),Number($("c").value),Number($("L").value),Number($("Wh").value),Number($("MaxNet").value),{
+      minP:Number($("minP").value),maxP:Number($("maxP").value),minC:Number($("minC").value),maxC:Number($("maxC").value)
+    })
+  }
+
+  function updateMetrics(){
+    const r=baseline()
+    $("mIncome").textContent=fmt(r.income,2)
+    $("mCost").textContent=fmt(r.cost,2)
+    $("mNet").textContent=fmt(r.net,2)
+    $("mScore").textContent=fmt(r.score,3)
+  }
+
+  function drawCurves(){
+    const r0=baseline()
+    let lo=Number($("curveLo").value), hi=Number($("curveHi").value), step=Math.abs(Number($("curveStep").value)||1)
+    if(step===0) step=1
+    if(hi<lo){const t=lo;lo=hi;hi=t}
+    const xSel=$("curveX").value
+    const xs=[], yIncome=[], yCost=[], yNet=[], yScore=[]
+    const limits={minP:Number($("minP").value),maxP:Number($("maxP").value),minC:Number($("minC").value),maxC:Number($("maxC").value)}
+    for(let x=lo; x<=hi+1e-12; x+=step){
+      let p=r0.p,c=r0.c,L=r0.L,Wh=r0.Wh
+      if(xSel==="p") p=roundInt(x)
+      if(xSel==="c") c=roundInt(x)
+      if(xSel==="L") L=roundInt(x)
+      if(xSel==="Wh") Wh=Number(x)
+      const rr=calcM2(p,c,L,Wh,Number($("MaxNet").value),limits)
+      xs.push(xSel==="Wh"?Number(x):roundInt(x))
+      yIncome.push(rr.income)
+      yCost.push(rr.cost)
+      yNet.push(rr.net)
+      yScore.push(rr.score)
+    }
+    const traces=[]
+    if($("showIncome").checked) traces.push({x:xs,y:yIncome,name:"Income",mode:"lines",line:{width:3}})
+    if($("showCost").checked) traces.push({x:xs,y:yCost,name:"Cost",mode:"lines",line:{width:3}})
+    if($("showNet").checked) traces.push({x:xs,y:yNet,name:"Net",mode:"lines",line:{width:3}})
+    if($("showScore").checked) traces.push({x:xs,y:yScore,name:"Score",mode:"lines",line:{width:3}})
+    const xlabel={p:"Passengers",c:"Cargo",L:"Laps",Wh:"Wh"}[xSel]
+    const ylabel="Value"
+    const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:xlabel,gridcolor:"#ebeff6"},yaxis:{title:ylabel,gridcolor:"#ebeff6"},legend:{orientation:"h"}}
+    Plotly.react("curvePlot",traces,layout,{displayModeBar:false,responsive:true})
+  }
+
+  function drawSensitivity(){
+    const base=baseline()
+    const baseScore=base.score
+    const span=Math.max(1,Math.abs(Number($("sensSpan").value)||50))
+    const steps=Math.max(5,Math.floor(Number($("sensSteps").value)||41))
+    const limits={minP:Number($("minP").value),maxP:Number($("maxP").value),minC:Number($("minC").value),maxC:Number($("maxC").value)}
+    const sel={p:$("sensP").checked,c:$("sensC").checked,L:$("sensL").checked,Wh:$("sensWh").checked}
+    const traces=[]
+    const mk = (key,label,isDiscrete)=>{
+      const X=[],Y=[]
+      for(let i=0;i<steps;i++){
+        const pct=-span+(2*span)*i/(steps-1)
+        let p=base.p,c=base.c,L=base.L,Wh=base.Wh
+        if(key==="p") p=isDiscrete?clamp(Math.round(base.p*(1+pct/100)),limits.minP,limits.maxP):base.p
+        if(key==="c") c=isDiscrete?clamp(Math.round(base.c*(1+pct/100)),limits.minC,limits.maxC):base.c
+        if(key==="L") L=isDiscrete?Math.max(0,Math.round(base.L*(1+pct/100))):base.L
+        if(key==="Wh") Wh=base.Wh*(1+pct/100)
+        const r=calcM2(p,c,L,Wh,Number($("MaxNet").value),limits)
+        const dy=baseScore===0?0:100*(r.score-baseScore)/Math.abs(baseScore)
+        X.push(pct); Y.push(dy)
+      }
+      traces.push({x:X,y:Y,name:label,mode:"lines",line:{width:3}})
+    }
+    if(sel.p) mk("p","Passengers",true)
+    if(sel.c) mk("c","Cargo",true)
+    if(sel.L) mk("L","Laps",true)
+    if(sel.Wh) mk("Wh","Wh",false)
+    const layout={margin:{l:58,r:18,t:10,b:48},paper_bgcolor:"#fff",plot_bgcolor:"#fff",xaxis:{title:"% change in parameter",gridcolor:"#ebeff6"},yaxis:{title:"% change in Score",gridcolor:"#ebeff6"},legend:{orientation:"h"}}
+    Plotly.react("sensPlot",traces,layout,{displayModeBar:false,responsive:true})
+  }
+
+  function syncUI(){
+    updateMetrics()
+    drawCurves()
+    drawSensitivity()
+  }
+
+  ;["p","c","L","Wh","MaxNet","minP","maxP","minC","maxC","curveX","curveLo","curveHi","curveStep","showIncome","showCost","showNet","showScore","sensSpan","sensSteps","sensHold","sensP","sensC","sensL","sensWh"].forEach(id=>{
+    $(id).addEventListener("input",syncUI)
+  })
+
+  $("reset").addEventListener("click",()=>{
+    $("p").value=6;$("c").value=2;$("L").value=5;$("Wh").value=80;$("MaxNet").value=1000
+    $("minP").value=0;$("maxP").value=50;$("minC").value=0;$("maxC").value=30
+    $("curveX").value="L";$("curveLo").value=0;$("curveHi").value=12;$("curveStep").value=1
+    $("showIncome").checked=true;$("showCost").checked=true;$("showNet").checked=true;$("showScore").checked=true
+    $("sensSpan").value=50;$("sensSteps").value=41;$("sensHold").value="1"
+    $("sensP").checked=true;$("sensC").checked=true;$("sensL").checked=true;$("sensWh").checked=true
+    syncUI()
+  })
+
+  syncUI()
+</script>
+</body>
+</html>
